@@ -312,8 +312,6 @@ class window.Force3DLayout
 			@mouse.x = ((event.clientX - offset.left + window.scrollX) / @canvas.offsetWidth) * 2 - 1
 			@mouse.y = -((event.clientY - offset.top + window.scrollY) / @canvas.offsetHeight) * 2 + 1
 
-			
-
 			if @selectedObject?
 
 				intersectPlan = @getIntersectPlan()
@@ -326,7 +324,6 @@ class window.Force3DLayout
 
 			else
 				intersectedObject = @getTargetObject()
-
 
 				if intersectedObject?
 					
@@ -347,6 +344,7 @@ class window.Force3DLayout
 					@canvas.style.cursor = 'pointer'
 
 				else
+					@userFunctions['nodeBlur']()
 					if @currentIntersectedObject? and @currentIntersectedObject.object.text3D?
 						@currentIntersectedObject.object.text3D.visible = no
 					if @previousIntersectedObject? && @previousIntersectedObject.object.text3D?
@@ -733,7 +731,7 @@ class window.Force3DLayout
 		color = @linksColor
 		material = new THREE.LineBasicMaterial {
 			color : color
-			linewidth : 1
+			linewidth : 10
 			visible: yes
 		}
 
@@ -1113,10 +1111,23 @@ class window.Force3DLayout
 )()
 canvas = '#mainTarget'
 
+$tooltip = $('#tooltip')
+
+$(document).on 'mousemove', (e)->
+	$tooltip.css {
+		top: e.pageY+10,
+		left: e.pageX+10
+	}
+
 force3DLayout = new Force3DLayout(canvas)
 
 force3DLayout.on 'nodeHovered', (node)->
-	console.log node
+	$tooltip.fadeIn 'fast'
+	$tooltip.find('.nodeName').text node.name
+	$tooltip.find('.nodeType').text node.type
+
+force3DLayout.on 'nodeBlur', ->
+	$tooltip.fadeOut 'fast'
 
 
 window.force3DLayout = force3DLayout
