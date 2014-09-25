@@ -731,7 +731,7 @@ class window.Force3DLayout
 		color = @linksColor
 		material = new THREE.LineBasicMaterial {
 			color : color
-			linewidth : 10
+			linewidth : 1
 			visible: yes
 		}
 

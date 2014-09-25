@@ -706,7 +706,7 @@
       color = this.linksColor;
       material = new THREE.LineBasicMaterial({
         color: color,
-        linewidth: 10,
+        linewidth: 1,
         visible: true
       });
       geometry = new THREE.Geometry();
