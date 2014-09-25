@@ -4,6 +4,7 @@
     <title></title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="stylesheets/style.css">
+    <link rel="stylesheet" href="css/colorpicker.css">
   </head>
   <body>
     <h1>Choregraphie3DForce</h1>
@@ -18,6 +19,16 @@
       <li><b>Zoom:</b> Mouse wheel or Middle Click + Drag up/down</li>
       <li><b>Move a node: </b> Drag it!</li>
     </ul>
+    <hr>
+    <button onclick="force3DLayout.switchPerspective()">Switch perspective</button> |  Background color:
+    <input size="5" class="colorPickerBackground"> |  Lights color:
+    <input size="5" class="colorPickerLights"> |  Nodes coloring method:
+    <select class="nodesColorMode">
+      <option value="1">10</option>
+      <option value="2">20a</option>
+      <option value="3">20b</option>
+      <option value="4">20c</option>
+    </select>
     <hr>
     <div id="tooltip">
       <div class="nodeName"></div>

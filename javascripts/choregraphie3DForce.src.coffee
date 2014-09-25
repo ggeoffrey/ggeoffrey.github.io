@@ -652,7 +652,7 @@ class window.Force3DLayout
 
 	setParticlesColor : (hexColor)->
 		for link in @rawLinks
-			link.particles.material.color.setHex(hexColor)
+			link.particles.material.color.set(hexColor)
 
 	addNode : (node, bulkInsert) ->
 		if node? and not @tree.nodes[node.name]
@@ -848,6 +848,8 @@ class window.Force3DLayout
 			color = @colorBuilder node.type
 			node.node3D.material.color = colorMap[color]
 			node.node3D.material.needsUpdate = yes
+
+		undefined
 		
 
 			
@@ -1109,25 +1111,3 @@ class window.Force3DLayout
 
 	return
 )()
-canvas = '#mainTarget'
-
-$tooltip = $('#tooltip')
-
-$(document).on 'mousemove', (e)->
-	$tooltip.css {
-		top: e.pageY+10,
-		left: e.pageX+10
-	}
-
-force3DLayout = new Force3DLayout(canvas)
-
-force3DLayout.on 'nodeHovered', (node)->
-	$tooltip.fadeIn 'fast'
-	$tooltip.find('.nodeName').text node.name
-	$tooltip.find('.nodeType').text node.type
-
-force3DLayout.on 'nodeBlur', ->
-	$tooltip.fadeOut 'fast'
-
-
-window.force3DLayout = force3DLayout

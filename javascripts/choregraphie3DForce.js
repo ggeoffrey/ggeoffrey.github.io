@@ -1,5 +1,5 @@
 (function() {
-  var $tooltip, Link3D, Node, Node3D, canvas, force3DLayout,
+  var Link3D, Node, Node3D,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -620,7 +620,7 @@
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         link = _ref[_i];
-        _results.push(link.particles.material.color.setHex(hexColor));
+        _results.push(link.particles.material.color.set(hexColor));
       }
       return _results;
     };
@@ -791,7 +791,7 @@
     };
 
     Force3DLayout.prototype.switchColorMode = function(typeNumber) {
-      var color, colorMap, node, _i, _j, _len, _len1, _ref, _ref1, _results;
+      var color, colorMap, node, _i, _j, _len, _len1, _ref, _ref1;
       switch (typeNumber) {
         case 2:
           this.colorBuilder = d3.scale.category20();
@@ -815,14 +815,13 @@
         }
       }
       _ref1 = this.rawNodes;
-      _results = [];
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         node = _ref1[_j];
         color = this.colorBuilder(node.type);
         node.node3D.material.color = colorMap[color];
-        _results.push(node.node3D.material.needsUpdate = true);
+        node.node3D.material.needsUpdate = true;
       }
-      return _results;
+      return void 0;
     };
 
     Force3DLayout.prototype.drawAxis = function() {
@@ -1179,31 +1178,6 @@
       return force3D;
     };
   })();
-
-  canvas = '#mainTarget';
-
-  $tooltip = $('#tooltip');
-
-  $(document).on('mousemove', function(e) {
-    return $tooltip.css({
-      top: e.pageY + 10,
-      left: e.pageX + 10
-    });
-  });
-
-  force3DLayout = new Force3DLayout(canvas);
-
-  force3DLayout.on('nodeHovered', function(node) {
-    $tooltip.fadeIn('fast');
-    $tooltip.find('.nodeName').text(node.name);
-    return $tooltip.find('.nodeType').text(node.type);
-  });
-
-  force3DLayout.on('nodeBlur', function() {
-    return $tooltip.fadeOut('fast');
-  });
-
-  window.force3DLayout = force3DLayout;
 
 }).call(this);
 
