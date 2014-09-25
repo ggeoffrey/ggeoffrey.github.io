@@ -36,3 +36,10 @@ a {
   margin: auto;
   text-align: center;
 }
+.inputText {
+  width: 100%;
+  height: 200px;
+}
+.inputText-invalid {
+  border-color: #f00;
+}

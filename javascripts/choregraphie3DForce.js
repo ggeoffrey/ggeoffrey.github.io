@@ -479,7 +479,7 @@
         }
       }
       this.particlesCountRange = d3.scale.linear().domain([0, maxValue]).range([1, 30]);
-      this.nodeSizer = d3.scale.log().domain([1, maxValue]).range([0.1, 10]);
+      this.nodeSizer = d3.scale.log().domain([1, maxValue + 100]).range([0.1, 10]);
       _ref1 = this.rawNodes;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         node = _ref1[_i];

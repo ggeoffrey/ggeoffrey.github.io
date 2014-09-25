@@ -520,7 +520,7 @@ class window.Force3DLayout
 				.domain [0, maxValue]
 				.range [1, 30]
 		@nodeSizer = d3.scale.log()
-						.domain [1, maxValue]
+						.domain [1, maxValue+100]
 						.range [0.1, 10]
 
 		for node in @rawNodes

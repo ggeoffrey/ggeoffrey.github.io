@@ -8,11 +8,11 @@
   </head>
   <body>
     <h1>Choregraphie3DForce</h1>
-    <p>The example bellow show data comming from a *real datacenter*. of course, names has been anonaymized.</p>
-    <P>
+    <p>The example bellow show data comming from a <b>real datacenter</b>. of course, names has been anonaymized.</p>
+    <p>
       This is an early preview and essential functionnalies aren't here yet. If you think "it's stupid, why ... isn't supported?", be patient, it will be soon ;)
       
-    </P>
+    </p>
     <h2>Controls</h2>
     <ul>
       <li><b>Rotate:</b> Clic + Drag on an empty area</li>
@@ -37,13 +37,93 @@
     <canvas id="mainTarget">
       Your browser doesn't support the &lt;canvas&gt; element. Please update it.
       
-      
-      
-      
-      
-      
-      
     </canvas>
+    <h2>Create your own network</h2>
+    <table width="100%">
+      <tr>
+        <th>Nodes</th>
+        <th>Links</th>
+      </tr>
+      <tr>
+        <td>
+          <textarea id="nodesJSONSource" class="inputText">
+            [
+             {
+              "name": "World Wide Web",
+              "type": "Network"
+             },
+             {
+              "name": "Proxy server",
+              "type": "Server"
+             },
+             {
+              "name": "Database server",
+              "type": "Database"
+             },
+             {
+              "name": "Application server",
+              "type": "Busines server"
+             },
+             {
+              "name": "Redis",
+              "type": "Broadcaster"
+             },
+             {
+              "name": "Cluster",
+              "type": "Broadcaster"
+             }
+            ]
+          </textarea>
+        </td>
+        <td>
+          <textarea id="linksJSONSource" class="inputText">
+            [
+             {
+              "source": "World Wide Web",
+              "target": "Proxy server",
+              "value": 15
+             },
+             {
+              "source": "Proxy server",
+              "target": "Application server",
+              "value": 10
+             },
+             {
+              "source": "Application server",
+              "target": "Database server",
+              "value": 5
+             },
+             {
+              "source": "Database server",
+              "target": "Cluster",
+              "value": 2
+             },
+             {
+              "source": "Application server",
+              "target": "Redis",
+              "value": 5
+             },
+             {
+              "source": "Proxy server",
+              "target": "Redis",
+              "value": 5
+             },
+             {
+              "source": "Redis",
+              "target": "Cluster",
+              "value": 5
+             }
+            ]
+            
+          </textarea>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2" align="center">
+          <button onclick="parseInput()">Build it</button>
+        </td>
+      </tr>
+    </table>
     <script src="javascripts/vendors.js"></script>
     <script src="javascripts/choregraphie3DForce.js"></script>
     <script src="javascripts/main.js"></script>

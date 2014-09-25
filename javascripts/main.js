@@ -35,9 +35,36 @@
         return window.force3DLayout.setParticlesColor('#' + hex);
       }
     });
-    return $('.nodesColorMode').on('change', function() {
+    $('.nodesColorMode').on('change', function() {
       return window.force3DLayout.switchColorMode(parseInt(this.value, 10));
     });
+    return window.parseInput = function() {
+      var e, links, nodes, rawLinks, rawNodes;
+      rawNodes = $("#nodesJSONSource").val();
+      rawLinks = $("#linksJSONSource").val();
+      nodes = null;
+      links = null;
+      try {
+        nodes = JSON.parse(rawNodes);
+        $("#nodesJSONSource").removeClass('inputText-invalid');
+        window.force3DLayout.setLinks([]);
+        window.force3DLayout.setNodes(nodes);
+        try {
+          links = JSON.parse(rawLinks);
+          $("#linksJSONSource").removeClass('inputText-invalid');
+          window.force3DLayout.setLinks(links);
+          return window.force3DLayout.attachParticles();
+        } catch (_error) {
+          e = _error;
+          $("#linksJSONSource").addClass('inputText-invalid');
+          return console.log(e);
+        }
+      } catch (_error) {
+        e = _error;
+        console.log(e);
+        return $("#nodesJSONSource").addClass('inputText-invalid');
+      }
+    };
   };
 
 }).call(this);
