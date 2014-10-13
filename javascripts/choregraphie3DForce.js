@@ -1,3 +1,25 @@
+
+/*
+
+README:
+
+	Are you curious ? Thanks !
+
+	Let me explain some little choices I made:
+
+		This example is build without any framwork ( Angular, backbone, etc...), because I want 
+		to expose this library as raw as possible. Of course, in a real project, you should use 
+		one of them!
+
+		If there is bugs on IE:
+
+			Well, I'm not a Microsoft hater. And I must admit they make good softwares.
+			But, even if IE (since v10), is becoming better over time (and was totally crap before),
+			 IE 11 still lacks some cutting edge features, like WebGL->DirectX convertions.
+			I encourage you to use Chrome (or Chromium) for cutting edge technologies like this one.
+			(But remember that the wind is changing for IE).
+ */
+
 (function() {
   var Link3D, Node, Node3D,
     __hasProp = {}.hasOwnProperty,
@@ -184,16 +206,19 @@
       this.selectedObjectClick = null;
       this.nodeCategories = {};
       this.nodeVisible = {};
-      this.init();
     }
 
     Force3DLayout.prototype.on = function(flag, callback) {
       return this.userFunctions[flag] = callback;
     };
 
+    Force3DLayout.prototype.start = function() {
+      return this.init();
+    };
+
     Force3DLayout.prototype.init = function() {
       this.initForce();
-      this.drawTestHugeNetwork();
+      this.drawTestParticles();
       this.animate();
       setTimeout(((function(_this) {
         return function() {
@@ -523,7 +548,45 @@
         this.addNode(node, true);
       }
       this.force.nodes(this.rawNodes);
+      if (this.userFunctions['nodesChanged'] != null) {
+        this.userFunctions['nodesChanged']();
+      }
       return this.skipForceEnter();
+    };
+
+    Force3DLayout.prototype.getNodes = function() {
+      var copiedNodes, n, _i, _len, _ref;
+      copiedNodes = [];
+      _ref = this.rawNodes;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        n = _ref[_i];
+        copiedNodes.push({
+          name: n.name,
+          type: n.type,
+          weight: n.weight
+        });
+      }
+      return copiedNodes;
+    };
+
+    Force3DLayout.prototype.getLinks = function() {
+      var copiedLinks, link, _i, _len, _ref;
+      copiedLinks = [];
+      _ref = this.rawLinks;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        link = _ref[_i];
+        copiedLinks.push({
+          id: link.uniqueLinkId,
+          source: link.source,
+          target: link.target,
+          value: link.value
+        });
+      }
+      return copiedLinks;
+    };
+
+    Force3DLayout.prototype.color = function(value) {
+      return this.colorBuilder(value);
     };
 
     Force3DLayout.prototype.setLinks = function(links, skipBackup) {
@@ -549,6 +612,9 @@
       this.force.links(this.rawLinks);
       this.force.resume();
       this.refreshNodes();
+      if (this.userFunctions['linksChanged'] != null) {
+        this.userFunctions['linksChanged']();
+      }
       return this.force.start();
     };
 
@@ -629,7 +695,10 @@
       var node3D;
       if ((node != null) && !this.tree.nodes[node.name]) {
         node.type = node.type || node.group || node.family || node.kind || node["class"];
-        return node3D = this.createNode3D(node, bulkInsert);
+        node3D = this.createNode3D(node, bulkInsert);
+      }
+      if (!bulkInsert && (this.userFunctions['nodesChanged'] != null)) {
+        return this.userFunctions['nodesChanged']();
       }
     };
 
@@ -820,6 +889,12 @@
         color = this.colorBuilder(node.type);
         node.node3D.material.color = colorMap[color];
         node.node3D.material.needsUpdate = true;
+      }
+      if (this.userFunctions['nodesChanged'] != null) {
+        this.userFunctions['nodesChanged']();
+      }
+      if (this.userFunctions['linksChanged'] != null) {
+        this.userFunctions['linksChanged']();
       }
       return void 0;
     };

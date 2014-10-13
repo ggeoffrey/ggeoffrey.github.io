@@ -1,3 +1,25 @@
+###
+
+README:
+
+	Are you curious ? Thanks !
+
+	Let me explain some little choices I made:
+
+		This example is build without any framwork ( Angular, backbone, etc...), because I want 
+		to expose this library as raw as possible. Of course, in a real project, you should use 
+		one of them!
+
+		If there is bugs on IE:
+
+			Well, I'm not a Microsoft hater. And I must admit they make good softwares.
+			But, even if IE (since v10), is becoming better over time (and was totally crap before),
+			 IE 11 still lacks some cutting edge features, like WebGL->DirectX convertions.
+			I encourage you to use Chrome (or Chromium) for cutting edge technologies like this one.
+			(But remember that the wind is changing for IE).
+###
+
+
 class Node
 	COUNTER = 0
 	newId : -> COUNTER++
@@ -205,17 +227,19 @@ class window.Force3DLayout
 		@nodeVisible = {}
 
 
-		@init()
+		
 
 	on : (flag, callback) ->  @userFunctions[flag] = callback
+
+	start : -> @init()
 
 	init : ->
 		@initForce()
 		#@drawTestShapes()
 
 		#@drawAxis()
-		@drawTestHugeNetwork()
-		#@drawTestParticles()
+		#@drawTestHugeNetwork()
+		@drawTestParticles()
 
 		@animate()
 		setTimeout (=>
@@ -561,8 +585,36 @@ class window.Force3DLayout
 
 		@force.nodes @rawNodes
 
+		if @userFunctions['nodesChanged']?
+			@userFunctions['nodesChanged']()
 		@skipForceEnter()
 
+	getNodes : ->
+		copiedNodes = []
+
+		for n in @rawNodes
+			copiedNodes.push {
+				name: n.name
+				type: n.type
+				weight: n.weight
+			}
+
+		copiedNodes
+
+	getLinks : ->
+		copiedLinks = []
+
+		for link in @rawLinks
+			copiedLinks.push {
+				id : link.uniqueLinkId
+				source: link.source
+				target: link.target
+				value : link.value
+			}
+
+		copiedLinks
+
+	color : (value) -> @colorBuilder value
 
 	setLinks : (links, skipBackup)->
 
@@ -596,6 +648,8 @@ class window.Force3DLayout
 	
 
 		# @skipForceEnter() 
+		if @userFunctions['linksChanged']?
+			@userFunctions['linksChanged']()
 		@force.start()
 
 	#
@@ -658,6 +712,9 @@ class window.Force3DLayout
 		if node? and not @tree.nodes[node.name]
 			node.type = node.type || node.group || node.family || node.kind || node.class
 			node3D = @createNode3D node, bulkInsert
+
+		if not bulkInsert and  @userFunctions['nodesChanged']?
+			@userFunctions['nodesChanged']()
 
 
 	deleteNode : (query) ->
@@ -848,6 +905,12 @@ class window.Force3DLayout
 			color = @colorBuilder node.type
 			node.node3D.material.color = colorMap[color]
 			node.node3D.material.needsUpdate = yes
+
+
+		if @userFunctions['nodesChanged']?
+			@userFunctions['nodesChanged']()
+		if @userFunctions['linksChanged']?
+			@userFunctions['linksChanged']()
 
 		undefined
 		
