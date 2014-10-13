@@ -6,7 +6,7 @@
   });
 
   start = function() {
-    var $tooltip, canvas, force3DLayout;
+    var $tooltip, canvas, filter, force3DLayout;
     canvas = '#mainTarget';
     $tooltip = $('#tooltip');
     $(document).on('mousemove', function(e) {
@@ -42,7 +42,6 @@
       $target = $('#links ul');
       links = force3DLayout.getLinks();
       $target.empty();
-      console.log(links);
       _results = [];
       for (_i = 0, _len = links.length; _i < _len; _i++) {
         link = links[_i];
@@ -52,6 +51,30 @@
       }
       return _results;
     });
+    filter = function() {
+      var $lis, e, match, pattern, regexp;
+      console.log('changed');
+      match = true;
+      pattern = $(this).val();
+      if (pattern === "") {
+        pattern = ".*";
+      }
+      $lis = $(this).siblings('ul').find('li');
+      $lis.css('display', 'block');
+      regexp = null;
+      try {
+        regexp = new RegExp(pattern, 'i');
+      } catch (_error) {
+        e = _error;
+        pattern = new RegExp('.*', 'i');
+      }
+      return $lis.each(function() {
+        if (!$(this).text().match(regexp)) {
+          return $(this).css('display', 'none');
+        }
+      });
+    };
+    $('.filter').on('keyup', filter);
     window.force3DLayout = force3DLayout;
     force3DLayout.start();
     $('.colorPickerBackground').ColorPicker({
