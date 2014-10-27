@@ -16,7 +16,6 @@ README:
 			But, even if IE (since v10), is becoming better over time (and was totally crap before),
 			 IE 11 still lacks some cutting edge features, like WebGL->DirectX convertions.
 			I encourage you to use Chrome (or Chromium) for cutting edge technologies like this one.
-			(But remember that the wind is changing for IE).
 ###
 
 

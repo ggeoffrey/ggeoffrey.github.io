@@ -218,7 +218,8 @@ README:
 
     Force3DLayout.prototype.init = function() {
       this.initForce();
-      this.drawTestParticles();
+      //this.drawTestParticles();
+      this.drawTestHugeNetwork();
       this.animate();
       setTimeout(((function(_this) {
         return function() {
