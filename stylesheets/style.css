@@ -36,6 +36,8 @@ a {
 #links {
   position: relative;
   color: #fff;
+  max-height: 500px;
+  overflow: hidden;
 }
 #nodes ul,
 #links ul {
