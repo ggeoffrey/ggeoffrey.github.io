@@ -1,169 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
   <head>
-    <title></title>
+    <title>GravityGraph</title>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="stylesheets/style.css">
-    <link rel="stylesheet" href="css/colorpicker.css">
+    
   </head>
   <body>
     <div id="header">
-      <h1>Choregraphie3DForce</h1>
-      <div style="width: 100%; text-align:center">
-        <!-- <video controls="controls"  autoplay width="720" height="576">
-          <source src="videos/choregraphie.mp4" type="video/mp4" />
-          <source src="videos/choregraphie.webm" type="video/webm" />
-          <source src="videos/choregraphie.theora.ogv" type="video/ogg" />
-          <param name="wmode" value="transparent" />
-        </video> -->
-      </div>
+      <h1>GravityGraph</h1>
+    </div>
 
       <h2>About</h2>
-      <p>
-        As this page is using cutting edge technologies, I strongly encourage you to <span style="font-weight:bold; color:red">use Chrome</span>.
-      </p>
-      <p>
+      
+        This site is evolving to GravityGraph. It will be available soon.
 
-        This page is <span style="font-weight:bold">as raw as possible</span> to let you inspect the source code easily.
-      </p>
-
-      <h2>Example</h2>
-
-      <p>The example bellow show data coming from a <b>real datacenter</b>. of course, names has been anonymized.</p>
-      <p>
-        This is an early preview and essential functionalities aren't here yet. If you think "it's stupid, why ... isn't supported?", just be patient, it will be soon ;)
-        
-      </p>
-      <h2>Controls</h2>
-      <ul>
-        <li><b>Rotate:</b> Clic + Drag on an empty area</li>
-        <li><b>Zoom:</b> Mouse wheel or Middle Click + Drag up/down</li>
-        <li><b>Move a node: </b> Drag it!</li>
-      </ul>
-    </div>
-    <hr>
-    <button onclick="force3DLayout.switchPerspective()">Switch perspective</button> |  Background color:
-    <input size="5" class="colorPickerBackground"> |  Lights color:
-    <input size="5" class="colorPickerLights"> |  Nodes coloring method:
-    <select class="nodesColorMode">
-      <option value="1">10</option>
-      <option value="2">20a</option>
-      <option value="3">20b</option>
-      <option value="4">20c</option>
-    </select>
-    <hr>
-    <div id="tooltip">
-      <div class="nodeName"></div>
-      <div class="nodeType"></div>
-    </div>
-    <div id="nodes">
-      <input type="text" placeholder="Filter nodes..." class="filter">
-      <ul>
-        <li>Here will be listed the nodes</li>
-      </ul>
-    </div>
-    <div id="links">
-      <input type="text" placeholder="Filter links..." class="filter">
-      <ul>
-        <li>Here will be listed the links</li>
-      </ul>
-    </div>
-    <div id="mainTargetContainer">
-      <canvas id="mainTarget">
-        Your browser doesn't support the &lt;canvas&gt; element. Please update it.
-        
-      </canvas>
-    </div>
-    <div id="footer">
-      <h2>Create your own network</h2>
-      <table width="100%">
-        <tr>
-          <th>Nodes</th>
-          <th>Links</th>
-        </tr>
-        <tr>
-          <td>
-            <textarea id="nodesJSONSource" class="inputText">
-              [
-               {
-                "name": "World Wide Web",
-                "type": "Network"
-               },
-               {
-                "name": "Proxy server",
-                "type": "Server"
-               },
-               {
-                "name": "Database server",
-                "type": "Database"
-               },
-               {
-                "name": "Application server",
-                "type": "Business server"
-               },
-               {
-                "name": "Redis",
-                "type": "Broadcaster"
-               },
-               {
-                "name": "Cluster",
-                "type": "Broadcaster"
-               }
-              ]
-            </textarea>
-          </td>
-          <td>
-            <textarea id="linksJSONSource" class="inputText">
-              [
-               {
-                "source": "World Wide Web",
-                "target": "Proxy server",
-                "value": 15
-               },
-               {
-                "source": "Proxy server",
-                "target": "Application server",
-                "value": 10
-               },
-               {
-                "source": "Application server",
-                "target": "Database server",
-                "value": 5
-               },
-               {
-                "source": "Database server",
-                "target": "Cluster",
-                "value": 2
-               },
-               {
-                "source": "Application server",
-                "target": "Redis",
-                "value": 5
-               },
-               {
-                "source": "Proxy server",
-                "target": "Redis",
-                "value": 5
-               },
-               {
-                "source": "Redis",
-                "target": "Cluster",
-                "value": 5
-               }
-              ]
-              
-            </textarea>
-          </td>
-        </tr>
-        <tr>
-          <td colspan="2" align="center">
-            <button onclick="parseInput()">Build it</button>
-          </td>
-        </tr>
-      </table>
-    </div>
-    <script src="javascripts/vendors.js"></script>
-    <script src="javascripts/choregraphie3DForce.js"></script>
-    <script src="javascripts/main.js"></script>
   </body>
 </html>
