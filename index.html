@@ -1,18 +1,135 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
-  <head>
-    <title>GravityGraph</title>
+<head lang="en">
     <meta charset="UTF-8">
-    
-  </head>
-  <body>
-    <div id="header">
-      <h1>GravityGraph</h1>
+    <title>GravityGraph</title>
+    <link rel="stylesheet" href="main.css"/>
+</head>
+<body>
+
+
+
+    <canvas id="dev-canvas" width="1300" height="600">
+        Sadly, your browser doesn't support this technology. <br/>
+        Please update your browser or your drivers.
+    </canvas>
+
+    <div id="toolbar">
+        <button onclick="gravityGraph.resetFocus()">
+            Reset
+        </button>
+        <button onclick="gravityGraph.focusOnRelations()">
+            Show relations
+        </button>
+        <button onclick="gravityGraph.focusOnGroup()">
+            Show group relations
+        </button>
+        Charge : <input id="charge" type="range" min="-150" max="10" step="1" onchange="changeCharge(this.value);"/>
+         <span id="chargeVal"></span>
+        
+         Distance : <input id="distance" type="range" min="-10" max="200" step="1" onchange="changeDistance(this.value);"/>
+         <span id="distanceVal"></span>
+         
+        <button onclick="separate = !separate; gravityGraph.separateGroups(separate);">
+            Separate groups
+        </button>
+        <button onclick="gravityGraph.shake();">
+            Shake
+        </button>
     </div>
 
-      <h2>About</h2>
-      
-        This site is evolving to GravityGraph. It will be available soon.
+    <div id="tooltip"></div>
 
-  </body>
+    <script src="vendors/three.js"></script>
+    <script src="vendors/Detector.js"></script>
+    <script src="vendors/OrbitControls.js"></script>
+    <script src="vendors/CanvasRenderer.js"></script>
+    <script src="vendors/Projector.js"></script>
+        
+    <script src="vendors/d3.js"></script>
+    <script src="vendors/d3.layout.force3D.js"></script>
+        
+    <script src="vendors/stats.min.js"></script>
+    <script src="vendors/tweenjs-0.6.0.min.js"></script>
+        
+    <script src="vendors/droid_sans_regular.typeface.js"></script>
+    
+    
+
+    <script src="dist/GravityGraph.js"></script>
+
+    <script>
+        
+        /// <reference path="dist/GravityGraph.js" />        
+        
+        var gravityGraph = new GravityGraph({
+            target : 'dev-canvas',
+            //opacity: 0,
+            //backgroundColor : 0xffffff,
+            quality : "high",
+            shadows : false,
+            flat : true,
+            flow : false,
+            stats : true,
+            charge : -100,
+            distance : 60,
+            colorType : "20"  // 10, 20a, 20b, 20c
+        });
+        
+        
+        var tooltip = document.getElementById('tooltip');
+        gravityGraph.on('nodeOvered', function (event, data) {
+            tooltip.style.left = (event.clientX + 20) + "px";
+            tooltip.style.top = (event.clientY - 20) + "px";
+            
+            tooltip.innerText = data.name;
+            tooltip.style.opacity = "1";
+        });
+        
+        gravityGraph.on('nodeBlur', function (event) {
+            tooltip.style.opacity = "0";
+        });
+        
+        gravityGraph.on('nodeSelected', function (event, data) {
+            document.title = data.name;
+        });
+        
+        
+        d3.json("data-test/miserables.json", function(error, graph) {
+            if (error) {
+                console.error(error);
+            }
+            else {
+                gravityGraph.setNodes(graph.nodes);
+                gravityGraph.setLinks(graph.links);
+                               
+                gravityGraph.start();
+            }
+        });
+        
+        
+        
+        var separate = false;
+        
+        
+        function changeCharge(val) {
+            gravityGraph.setCharge(val);
+            
+            document.getElementById('charge').value = val;
+            document.getElementById('chargeVal').innerText = val;
+                        
+        }
+        
+        function changeDistance(val) {
+            gravityGraph.setDistance(val);
+            
+            document.getElementById('distance').value = val;
+            document.getElementById('distanceVal').innerText = val;
+                        
+        }
+        
+        
+        
+    </script>
+</body>
 </html>
