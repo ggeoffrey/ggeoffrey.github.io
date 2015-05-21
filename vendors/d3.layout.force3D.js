@@ -24,7 +24,12 @@
 
 
         force3d.on = function(name,fn) {
-            tickFunction = fn
+            if(name == "tick"){
+                tickFunction = fn;
+            }
+            else{
+                forceXY.on(name, fn);                
+            }
             return force3d
         }
 

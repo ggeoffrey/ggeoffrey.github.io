@@ -12,7 +12,7 @@ body{
 
 
 #tooltip {
-    width: 10em;
+    min-width: 10em;
     
     background-color: rgba(255,255,255,0.8);
     position: absolute;

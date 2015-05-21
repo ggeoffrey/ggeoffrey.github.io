@@ -21,8 +21,14 @@
         <button onclick="gravityGraph.focusOnRelations()">
             Show relations
         </button>
-        <button onclick="gravityGraph.focusOnGroup()">
+        <button onclick="gravityGraph.focusOnGroupRelations(GravityGraph.ERelation.INNER_OUTER)">
             Show group relations
+        </button>
+        <button onclick="gravityGraph.focusOnGroupRelations(GravityGraph.ERelation.INNER)">
+            Show group internal relations
+        </button>
+        <button onclick="gravityGraph.focusOnGroupRelations(GravityGraph.ERelation.OUTER)">
+            Show group external relations
         </button>
         Charge : <input id="charge" type="range" min="-150" max="10" step="1" onchange="changeCharge(this.value);"/>
          <span id="chargeVal"></span>
@@ -55,14 +61,21 @@
     <script src="vendors/droid_sans_regular.typeface.js"></script>
     
     
-
+    
     <script src="dist/GravityGraph.js"></script>
+    
+    <!-- external -->
+    
+    <script src="vendors/underscore-min.js"></script>
+    
+    
+
 
     <script>
         
         /// <reference path="dist/GravityGraph.js" />        
         
-        var gravityGraph = new GravityGraph({
+        var gravityGraph = new GravityGraph.Graph({
             target : 'dev-canvas',
             //opacity: 0,
             //backgroundColor : 0xffffff,
@@ -95,6 +108,7 @@
         });
         
         
+        
         d3.json("data-test/miserables.json", function(error, graph) {
             if (error) {
                 console.error(error);
@@ -104,8 +118,20 @@
                 gravityGraph.setLinks(graph.links);
                                
                 gravityGraph.start();
+                
+                
+                /*
+                setTimeout(function () {
+                    gravityGraph.setNodes(graph.nodes.slice(0,15));
+                    gravityGraph.setLinks(graph.links);
+                    gravityGraph.start();
+                }, 500);
+                */
+                
+                
             }
         });
+        
         
         
         
@@ -127,6 +153,87 @@
             document.getElementById('distanceVal').innerText = val;
                         
         }
+        
+        
+        
+        
+        
+        function testLogs(){
+            
+            
+            console.log("loading");
+            d3.json("data-test/audit_activity.log.json", function(error, graph) {
+                
+                
+                if (error) {
+                    console.error(error);
+                }
+                else {
+                    
+                    console.log("formating data");
+                    
+                    var group = _.groupBy(graph.result, function (item) {
+                        return item["action name"];
+                    });
+                    
+                    
+                    
+                    for(var k in group){
+                        group[k] = _.groupBy(group[k], function (item) {
+                            return item["action"];
+                        });
+                        
+                        for(var subkey in group[k]){
+                            group[k][subkey] = group[k][subkey].length;
+                        }
+                        
+                    }
+                    
+                    var nodes = {};
+                    var links = [];
+                    
+                    for(var i in group){
+                        nodes[i] = {
+                            group : "Application",
+                            name : i
+                        };
+                        
+                        for(var j in group[i]){
+                             nodes[j] = {
+                               group: "Action",
+                               name : j 
+                            };
+                            
+                            links.push({
+                                source : i,
+                                target : j,
+                                value : group[i][j]
+                            });
+                            
+                        }                        
+                    }
+                    
+                    gravityGraph.setNodes(nodes);
+                    gravityGraph.setLinks(links);
+                    
+                    
+                    console.log("Done");
+                    
+                    gravityGraph.start();                   
+                    
+                    
+                    
+                }
+            });
+            
+            
+            
+            
+            
+        }
+        
+        //testLogs();
+        
         
         
         
