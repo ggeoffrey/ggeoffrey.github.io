@@ -1,4 +1,3 @@
-/// <reference path='headers/GravityGraph.d.ts' />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -22,7 +21,7 @@ var GravityGraph;
             if (Node3D.materialsMap[color]) {
                 material = Node3D.materialsMap[color];
             }
-            else if (config.quality == 2 /* HIGH */) {
+            else if (config.quality == GravityGraph.EQuality.HIGH) {
                 Node3D.OPACITY = 0.95;
                 material = new THREE.MeshLambertMaterial({
                     color: color,
@@ -33,7 +32,7 @@ var GravityGraph;
                 });
                 Node3D.materialsMap[color] = material;
             }
-            else if (config.quality < 2 /* HIGH */) {
+            else if (config.quality < GravityGraph.EQuality.HIGH) {
                 Node3D.OPACITY = 1;
                 material = new THREE.MeshBasicMaterial({
                     color: color,
@@ -63,6 +62,9 @@ var GravityGraph;
         Node3D.setColorMethod = function (colorScale) {
             Node3D.nodesColor = colorScale;
         };
+        Node3D.resetColorMethod = function () {
+            Node3D.nodesColor = null;
+        };
         Node3D.prototype.getColor = function () {
             var material = this.material;
             return material.color;
@@ -81,7 +83,7 @@ var GravityGraph;
             this.material.needsUpdate = true;
         };
         Node3D.prototype.updateTarget = function (position) {
-            if (this.quality == 0 /* LOW */) {
+            if (this.quality == GravityGraph.EQuality.LOW) {
                 this.lookAt(position);
             }
         };
@@ -115,7 +117,8 @@ var GravityGraph;
     })(THREE.Mesh);
     GravityGraph.Node3D = Node3D;
 })(GravityGraph || (GravityGraph = {}));
-/// <reference path='headers/GravityGraph.d.ts' />
+/// <reference path="headers/three.d.ts" />
+/// <reference path="Link3D.ts" />
 var GravityGraph;
 (function (GravityGraph) {
     var Cloud = (function (_super) {
@@ -126,7 +129,7 @@ var GravityGraph;
             this.nbParticles = 10;
             var geometry = new THREE.Geometry();
             for (var i = 0; i < this.nbParticles; i++) {
-                geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+                geometry.vertices.push(new THREE.Vector3(0, 0, 0 /*+ i * 5*/));
             }
             _super.call(this, geometry, Cloud.defaultMaterial);
             this.support.setCloud(this);
@@ -185,250 +188,126 @@ var GravityGraph;
     })(THREE.PointCloud);
     GravityGraph.Cloud = Cloud;
 })(GravityGraph || (GravityGraph = {}));
-/// <reference path='headers/GravityGraph.d.ts' />
 var GravityGraph;
 (function (GravityGraph) {
-    var NodeSelectAnimation = (function (_super) {
-        __extends(NodeSelectAnimation, _super);
-        function NodeSelectAnimation() {
-            var segmentCount = 32, radius = 30, geometry = new THREE.Geometry(), material = new THREE.LineBasicMaterial({
-                color: 0xff0000,
-                transparent: true
+    var Text3D = (function (_super) {
+        __extends(Text3D, _super);
+        function Text3D(support) {
+            this.support = support;
+            var materialFront = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            var materialArray = [materialFront];
+            var textGeom = new THREE.TextGeometry(support.getData().value + " >", {
+                size: 3, height: 0, curveSegments: 1,
+                font: "droid sans",
             });
-            for (var i = 0; i <= segmentCount; i++) {
-                var theta = (i / segmentCount) * Math.PI * 2;
-                geometry.vertices.push(new THREE.Vector3(Math.cos(theta) * radius, Math.sin(theta) * radius, 0));
-            }
-            _super.call(this, geometry, material);
-            this.changeDefaults();
+            // font: helvetiker, gentilis, droid sans, droid serif, optimer
+            // weight: normal, bold
+            //var textMaterial = new THREE.MeshFaceMaterial(materialArray);
+            _super.call(this, textGeom, materialFront);
+            textGeom.computeBoundingBox();
+            this.width = textGeom.boundingBox.max.x - textGeom.boundingBox.min.x;
+            this.rotateZ(Math.PI / 2);
+            this.setUnFocused();
         }
-        NodeSelectAnimation.prototype.changeDefaults = function () {
-            this.scale.set(1, 1, 1);
-            this.visible = false;
+        Text3D.prototype.update = function () {
+            this.position.copy(this.support.getSource().position);
+            this.position.add(this.support.getTarget().position.clone().sub(this.position).divideScalar(2));
+            this.lookAt(this.support.getTarget().position);
+            this.rotateY(-Math.PI / 2);
         };
-        NodeSelectAnimation.prototype.animate = function () {
-            var _this = this;
-            //createjs.Tween.removeTweens(this.animatedObject);
-            this.firstExpand = true;
-            this.material.opacity = 1;
-            this.material.needsUpdate = true;
-            this.animatedObject = { scaleCircle: 0, scaleNode: 1 };
-            this.animation = new createjs.Tween(this.animatedObject).to({
-                scaleCircle: 3000
-            }, 1000).call(function () {
-                //createjs.Tween.removeTweens(this.animatedObject);
-                _this.firstExpand = false;
-                _this.animatedObject.scaleCircle = 0;
-                _this.animation = new createjs.Tween(_this.animatedObject, {
-                    loop: true,
-                }).to({
-                    scaleCircle: 100,
-                }, 1000);
-            });
-            this.animation2 = new createjs.Tween(this.animatedObject, {
-                loop: true,
-            }).to({
-                scaleNode: 1.25
-            }, 500, createjs.Ease.backInOut).to({
-                scaleNode: 1
-            }, 500, createjs.Ease.backInOut);
-        };
-        NodeSelectAnimation.prototype.update = function (target) {
-            if (this.animatedObject.scaleCircle !== undefined) {
-                var s = this.animatedObject.scaleCircle / 100;
-                this.scale.set(s, s, s);
-                if (!this.firstExpand) {
-                    var opacity = Math.sin(1 - s);
-                    this.material.opacity = opacity;
-                    this.material.needsUpdate = true;
-                }
-                this.lookAt(target);
-                s = this.animatedObject.scaleNode;
-                this.support.scale.set(s, s, s);
-            }
-        };
-        NodeSelectAnimation.prototype.setPosition = function (node) {
-            this.support = node;
-            this.position.copy(node.position);
-        };
-        NodeSelectAnimation.prototype.show = function () {
+        Text3D.prototype.setFocused = function () {
             this.visible = true;
         };
-        NodeSelectAnimation.prototype.hide = function () {
-            this.support.scale.set(1, 1, 1);
+        Text3D.prototype.setUnFocused = function () {
             this.visible = false;
         };
-        return NodeSelectAnimation;
-    })(THREE.Line);
-    GravityGraph.NodeSelectAnimation = NodeSelectAnimation;
+        return Text3D;
+    })(THREE.Mesh);
+    GravityGraph.Text3D = Text3D;
 })(GravityGraph || (GravityGraph = {}));
-/// <reference path="headers/GravityGraph.d.ts" />
+/// <reference path="headers/three.d.ts" />
+/// <reference path="Cloud.ts" />
+/// <reference path="Text3D.ts" />
+/// <reference path="Arrow3D.ts" />
 var GravityGraph;
 (function (GravityGraph) {
-    var D3Wrapper = (function () {
-        function D3Wrapper(config, nodes, links) {
-            var _this = this;
-            if (nodes === void 0) { nodes = []; }
-            if (links === void 0) { links = []; }
+    var Link3D = (function (_super) {
+        __extends(Link3D, _super);
+        function Link3D(source, target, data, config) {
             this.config = config;
-            this.events = new Events();
-            this.nodes = nodes;
-            this.links = links;
-            this.working = false;
-            if (this.config.isFlat()) {
-                this.force = d3.layout.force();
-            }
-            else {
-                this.force = d3.layout.force3d();
-            }
-            this.force.charge(this.config.charge).linkDistance(this.config.distance).size([1000, 1000]).nodes(this.nodes).links(this.links).on('tick', function () {
-                _this.tick();
-            });
-            this.force.on("end", function () {
-                _this.working = false;
-            });
+            this.data = {
+                source: data.source,
+                target: data.target,
+                value: data.value
+            };
+            //this.arrow = new Arrow3D(this);
+            this.text = new GravityGraph.Text3D(this);
+            //this.arrow.add(this.text);
+            this.source = source;
+            this.target = target;
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(this.source.position);
+            geometry.vertices.push(this.target.position);
+            _super.call(this, geometry, Link3D.material);
+            this.add(this.text);
+            this.position = this.source.position;
+            this.castShadow = config.shadows;
+            this.visible = !this.config.flow;
         }
-        D3Wrapper.prototype.isWorking = function () {
-            return this.working;
+        Link3D.prototype.getData = function () {
+            return this.data;
         };
-        D3Wrapper.prototype.setNodes = function (nodes) {
-            if (nodes === void 0) { nodes = []; }
-            this.nodes = nodes;
-            this.force.nodes(this.nodes);
+        Link3D.prototype.setCloud = function (c) {
+            this.cloud = c;
         };
-        D3Wrapper.prototype.setLinks = function (links) {
-            if (links === void 0) { links = []; }
-            this.links = links;
-            this.force.links(this.links);
+        Link3D.prototype.getCloud = function () { return this.cloud; };
+        Link3D.prototype.getLineLength = function () { return this.lineLength; };
+        Link3D.prototype.getSource = function () { return this.source; };
+        Link3D.prototype.getTarget = function () { return this.target; };
+        Link3D.prototype.getArrow = function () {
+            return this.arrow;
         };
-        D3Wrapper.prototype.on = function (name, action) {
-            this.events.add(name, action);
+        Link3D.prototype.getText = function () {
+            return this.text;
         };
-        D3Wrapper.prototype.isStable = function () {
-            return this.force.alpha() <= 1e-2 || false;
-        };
-        D3Wrapper.prototype.isCalm = function () {
-            return this.force.alpha() <= 1e-1;
-        };
-        D3Wrapper.prototype.stabilize = function (limit) {
-            if (limit === void 0) { limit = 150; }
-            this.idle = true;
-            var k = 0;
-            while ((!this.isStable()) && (k < limit)) {
-                this.force.tick(), k = k + 1;
+        Link3D.prototype.update = function () {
+            this.lineLength = this.source.distanceTo(this.target);
+            //this.position = (this.source.position).clone();
+            //this.geometry.vertices[1] = this.target.position.clone().sub(this.source.position);
+            this.geometry.verticesNeedUpdate = true;
+            if (this.cloud) {
+                this.cloud.update();
             }
-            this.idle = false;
-            this.force.tick();
+            //this.arrow.update();
+            this.text.update();
         };
-        D3Wrapper.prototype.calmDown = function () {
-            //this.stabilize(50);
+        // VIEW
+        Link3D.prototype.setFocused = function () {
+            if (this.cloud)
+                this.cloud.visible = true;
+            //this.arrow.setFocused();
+            this.visible = true;
+            //this.text.setFocused();
         };
-        D3Wrapper.prototype.shake = function () {
-            if (this.working) {
-                this.force.resume();
+        Link3D.prototype.setUnFocused = function () {
+            if (!this.config.flow) {
+                if (this.cloud)
+                    this.cloud.visible = false;
             }
-            else {
-                this.force.start();
-            }
+            //this.arrow.setUnFocused();
+            this.visible = false;
+            //this.text.setUnFocused();        
         };
-        D3Wrapper.prototype.shakeHard = function () {
-            var _this = this;
-            var charge = this.force.charge();
-            var distance = this.force.linkDistance();
-            this.force.charge(10);
-            this.force.linkDistance(0);
-            this.force.start();
-            setTimeout(function () {
-                _this.force.charge(charge);
-                _this.force.linkDistance(distance);
-                _this.force.start();
-            }, 1500);
-        };
-        D3Wrapper.prototype.tick = function () {
-            this.working = true;
-            if (!this.isCalm) {
-                this.force.tick();
-            }
-            else if (!this.idle) {
-                var alpha = this.force.alpha();
-                this.events.emit("tick", [alpha]);
-            }
-        };
-        // VISUAL
-        D3Wrapper.prototype.setDistance = function (distance) {
-            this.force.linkDistance(distance);
-            this.force.start();
-            //this.calmDown();
-        };
-        D3Wrapper.prototype.setCharge = function (charge) {
-            this.force.charge(charge);
-            this.force.start();
-            //this.calmDown();
-        };
-        return D3Wrapper;
-    })();
-    GravityGraph.D3Wrapper = D3Wrapper;
+        Link3D.material = new THREE.LineBasicMaterial({ color: 0xffffff });
+        return Link3D;
+    })(THREE.Line);
+    GravityGraph.Link3D = Link3D;
 })(GravityGraph || (GravityGraph = {}));
-var Events = (function () {
-    function Events() {
-        this.eventsMap = {};
-    }
-    Events.prototype.emit = function (name, args) {
-        if (this.eventsMap[name]) {
-            this.eventsMap[name].apply(null, args);
-        }
-    };
-    Events.prototype.add = function (name, action) {
-        this.eventsMap[name] = action;
-    };
-    return Events;
-})();
-/// <reference path="headers/GravityGraph.d.ts" />
-var GravityGraph;
-(function (GravityGraph) {
-    var Foci = (function () {
-        function Foci() {
-            this.foci = {};
-            this.names = [];
-        }
-        Foci.prototype.addFocus = function (name) {
-            if (this.names.indexOf("" + name) == -1) {
-                this.names.push("" + name);
-            }
-            this.computeRepartition();
-        };
-        Foci.prototype.addAllFocus = function (key, array) {
-            var _this = this;
-            array.forEach(function (data) {
-                if (data[key]) {
-                    _this.addFocus("" + data[key]);
-                }
-            });
-        };
-        Foci.prototype.computeRepartition = function () {
-            this.foci = {};
-            var radius = 1000;
-            var pointCount = this.names.length;
-            for (var i = 0; i < pointCount; i++) {
-                var name = this.names[i];
-                var theta = (i / pointCount) * Math.PI * 2;
-                this.foci[name] = {
-                    x: (Math.cos(theta) * radius) + radius / 2,
-                    y: (Math.sin(theta) * radius) + radius / 2
-                };
-            }
-        };
-        Foci.prototype.getPositionOf = function (name) {
-            return this.foci["" + name];
-        };
-        return Foci;
-    })();
-    GravityGraph.Foci = Foci;
-})(GravityGraph || (GravityGraph = {}));
+/// <reference path="Node3D" />
+/// <reference path="Link3D" />
 /**
 * Created by Geoffrey on 5/10/2015.
 */
-/// <reference path="headers/GravityGraph.d.ts" />
 var GravityGraph;
 (function (GravityGraph) {
     (function (EQuality) {
@@ -463,7 +342,8 @@ var GravityGraph;
     })();
     GravityGraph.Utils = Utils;
 })(GravityGraph || (GravityGraph = {}));
-/// <reference path="headers/GravityGraph.d.ts" />
+/// <reference path="headers/detector.d.ts" />
+/// <reference path="headers/d3.d.ts" />
 var GravityGraph;
 (function (GravityGraph) {
     var Config = (function () {
@@ -471,11 +351,8 @@ var GravityGraph;
             this.U = new GravityGraph.Utils();
             this._config = config;
             this.webglAvailable = Detector.webgl;
-            if (this.quality > 1 /* MEDIUM */ && !this.isWebGL()) {
+            if (this.quality > GravityGraph.EQuality.MEDIUM && !this.isWebGL()) {
                 this._config.quality = "medium";
-                console.warn("Degraded mode ! (slower)");
-                console.warn("WebGL is disabled, your drivers, your DirectX version or your browser are outdated.");
-                console.warn("Please update your software.  (https://get.webgl.org/)");
             }
         }
         Object.defineProperty(Config.prototype, "target", {
@@ -487,16 +364,16 @@ var GravityGraph;
         });
         Object.defineProperty(Config.prototype, "quality", {
             get: function () {
-                var quality = 2 /* HIGH */;
+                var quality = GravityGraph.EQuality.HIGH;
                 switch (this._config.quality) {
                     case "high":
-                        quality = 2 /* HIGH */;
+                        quality = GravityGraph.EQuality.HIGH;
                         break;
                     case "medium":
-                        quality = 1 /* MEDIUM */;
+                        quality = GravityGraph.EQuality.MEDIUM;
                         break;
                     case "low":
-                        quality = 0 /* LOW */;
+                        quality = GravityGraph.EQuality.LOW;
                         break;
                 }
                 return quality;
@@ -564,37 +441,175 @@ var GravityGraph;
         });
         Object.defineProperty(Config.prototype, "colorBuilder", {
             get: function () {
-                var ret = d3.scale.category20;
-                switch (this._config.colorType) {
-                    case "10":
-                        ret = d3.scale.category10;
-                        break;
-                    case "20b":
-                        ret = d3.scale.category20b;
-                        break;
-                    case "20c":
-                        ret = d3.scale.category20c;
-                        break;
+                if (!Config.colorBuilder) {
+                    var ret = d3.scale.category20;
+                    switch (this._config.colorType) {
+                        case "10":
+                            ret = d3.scale.category10;
+                            break;
+                        case "20b":
+                            ret = d3.scale.category20b;
+                            break;
+                        case "20c":
+                            ret = d3.scale.category20c;
+                            break;
+                    }
+                    Config.colorBuilder = ret();
                 }
-                return ret();
+                return Config.colorBuilder;
             },
             enumerable: true,
             configurable: true
         });
+        Config.prototype.resetColorBuilder = function () {
+            Config.colorBuilder = null;
+        };
         Config.prototype.isWebGL = function () {
             return this.webglAvailable;
         };
         Object.defineProperty(Config.prototype, "shadows", {
             get: function () {
-                return this.U.parseBoolean(this._config.shadows) && this.quality > 1 /* MEDIUM */ && this.isWebGL();
+                return this.U.parseBoolean(this._config.shadows) && this.quality > GravityGraph.EQuality.MEDIUM && this.isWebGL();
             },
             enumerable: true,
             configurable: true
         });
+        Config.colorBuilder = null;
         return Config;
     })();
     GravityGraph.Config = Config;
 })(GravityGraph || (GravityGraph = {}));
+/// <reference path="headers/three.d.ts" />
+/// <reference path="headers/createjs-lib.d.ts" />
+/// <reference path="Node3D" />
+var GravityGraph;
+(function (GravityGraph) {
+    var NodeSelectAnimation = (function (_super) {
+        __extends(NodeSelectAnimation, _super);
+        function NodeSelectAnimation() {
+            var segmentCount = 32, radius = 30, geometry = new THREE.Geometry(), material = new THREE.LineBasicMaterial({
+                color: 0xff0000,
+                transparent: true
+            });
+            for (var i = 0; i <= segmentCount; i++) {
+                var theta = (i / segmentCount) * Math.PI * 2;
+                geometry.vertices.push(new THREE.Vector3(Math.cos(theta) * radius, Math.sin(theta) * radius, 0));
+            }
+            _super.call(this, geometry, material);
+            this.changeDefaults();
+        }
+        NodeSelectAnimation.prototype.changeDefaults = function () {
+            this.scale.set(1, 1, 1);
+            this.visible = false;
+        };
+        NodeSelectAnimation.prototype.animate = function () {
+            var _this = this;
+            //createjs.Tween.removeTweens(this.animatedObject);
+            this.firstExpand = true;
+            this.material.opacity = 1;
+            this.material.needsUpdate = true;
+            this.animatedObject = { scaleCircle: 0, scaleNode: 1 };
+            this.animation = new createjs.Tween(this.animatedObject)
+                .to({
+                scaleCircle: 3000
+            }, 1000)
+                .call(function () {
+                //createjs.Tween.removeTweens(this.animatedObject);
+                _this.firstExpand = false;
+                _this.animatedObject.scaleCircle = 0;
+                _this.animation = new createjs.Tween(_this.animatedObject, {
+                    loop: true,
+                })
+                    .to({
+                    scaleCircle: 100,
+                }, 1000);
+            });
+            this.animation2 = new createjs.Tween(this.animatedObject, {
+                loop: true,
+            })
+                .to({
+                scaleNode: 1.25
+            }, 500, createjs.Ease.backInOut)
+                .to({
+                scaleNode: 1
+            }, 500, createjs.Ease.backInOut);
+        };
+        NodeSelectAnimation.prototype.update = function (target) {
+            if (this.animatedObject.scaleCircle !== undefined) {
+                var s = this.animatedObject.scaleCircle / 100;
+                this.scale.set(s, s, s);
+                if (!this.firstExpand) {
+                    var opacity = Math.sin(1 - s);
+                    this.material.opacity = opacity;
+                    this.material.needsUpdate = true;
+                }
+                this.lookAt(target);
+                s = this.animatedObject.scaleNode;
+                this.support.scale.set(s, s, s);
+            }
+        };
+        NodeSelectAnimation.prototype.setPosition = function (node) {
+            this.support = node;
+            this.position.copy(node.position);
+        };
+        NodeSelectAnimation.prototype.show = function () {
+            this.visible = true;
+        };
+        NodeSelectAnimation.prototype.hide = function () {
+            this.support.scale.set(1, 1, 1);
+            this.visible = false;
+        };
+        return NodeSelectAnimation;
+    })(THREE.Line);
+    GravityGraph.NodeSelectAnimation = NodeSelectAnimation;
+})(GravityGraph || (GravityGraph = {}));
+/// <reference path="GlobalDefs.ts" />
+var GravityGraph;
+(function (GravityGraph) {
+    var Foci = (function () {
+        function Foci() {
+            this.foci = {};
+            this.names = [];
+        }
+        Foci.prototype.addFocus = function (name) {
+            if (this.names.indexOf("" + name) == -1) {
+                this.names.push("" + name);
+            }
+            this.computeRepartition();
+        };
+        Foci.prototype.addAllFocus = function (key, array) {
+            var _this = this;
+            array.forEach(function (data) {
+                if (data[key]) {
+                    _this.addFocus("" + data[key]);
+                }
+            });
+        };
+        Foci.prototype.computeRepartition = function () {
+            this.foci = {};
+            var radius = 1000;
+            var pointCount = this.names.length;
+            for (var i = 0; i < pointCount; i++) {
+                var name = this.names[i];
+                var theta = (i / pointCount) * Math.PI * 2;
+                this.foci[name] = {
+                    x: (Math.cos(theta) * radius) + radius / 2,
+                    y: (Math.sin(theta) * radius) + radius / 2
+                };
+            }
+        };
+        Foci.prototype.getPositionOf = function (name) {
+            return this.foci["" + name];
+        };
+        return Foci;
+    })();
+    GravityGraph.Foci = Foci;
+})(GravityGraph || (GravityGraph = {}));
+/// <reference path="headers/three" />
+/// <reference path="headers/three-orbitcontrols" />
+/// <reference path="headers/three-canvasrenderer" />
+/// <reference path="NodeSelectAnimation" />
+/// <reference path="Foci" />
 var GravityGraph;
 (function (GravityGraph) {
     var Visualisation3D = (function () {
@@ -619,7 +634,7 @@ var GravityGraph;
             if (this.config.isWebGL()) {
                 this.renderer = new THREE.WebGLRenderer({
                     canvas: this.canvas,
-                    antialias: this.config.quality > 0 /* LOW */,
+                    antialias: this.config.quality > GravityGraph.EQuality.LOW,
                     alpha: transparentRenderer,
                     devicePixelRatio: window.devicePixelRatio
                 });
@@ -638,12 +653,13 @@ var GravityGraph;
             }
             this.renderer.shadowMapEnabled = this.config.shadows;
             this.renderer.shadowMapType = THREE.PCFShadowMap;
+            this.renderer.shadowMapDebug = false;
             this.renderer.sortObjects = false;
             this.renderer.setClearColor(this.config.backgroundColor, this.config.opacity);
             this.renderer.setSize(this.canvas.width, this.canvas.height);
             this.scene = new THREE.Scene();
             this.nodeSelectAnimation = new GravityGraph.NodeSelectAnimation();
-            if (this.config.quality == 2 /* HIGH */) {
+            if (this.config.quality == GravityGraph.EQuality.HIGH) {
                 this.sphereBackground = this.addBackground();
             }
             this.addCamera();
@@ -711,7 +727,7 @@ var GravityGraph;
             x = 3000;
             y = 3000;
             z = 3000;
-            if (this.config.quality < 2 /* HIGH */) {
+            if (this.config.quality < GravityGraph.EQuality.HIGH) {
                 this.scene.add(new THREE.HemisphereLight(0xffffff, 0xffffff));
             }
             else {
@@ -738,7 +754,7 @@ var GravityGraph;
             light.shadowCameraNear = 200;
             //if(!this.config.isFlat()){
             var camera = this.camera;
-            light.shadowCameraFar = camera.far;
+            light.shadowCameraFar = camera.far * 2;
             //}
             light.shadowCameraFov = 50;
             light.shadowBias = -0.00022;
@@ -759,7 +775,7 @@ var GravityGraph;
                 opacity: this.config.opacity,
             });
             var sphereBackground = new THREE.Mesh(sphereBackgroundGeo, sphereBackgroundMat);
-            sphereBackground.receiveShadow = this.config.shadows;
+            sphereBackground.receiveShadow = true; // this.config.shadows;
             sphereBackground.scale.set(200, 200, 200);
             this.scene.add(sphereBackground);
             return sphereBackground;
@@ -818,6 +834,7 @@ var GravityGraph;
             this.projectionOffset = new THREE.Vector3(0, 0, 0);
             this.intersectPlane = new THREE.Mesh(new THREE.PlaneBufferGeometry(10, 10, 2, 2), new THREE.MeshBasicMaterial({ color: 0x202020, opacity: 0.75, transparent: false }));
             this.intersectPlane.visible = false;
+            this.intersectPlane.receiveShadow = true;
             this.intersectPlane.scale.set(1000, 1000, 1000);
             this.scene.add(this.intersectPlane);
         };
@@ -828,11 +845,9 @@ var GravityGraph;
             this.canvas.height = newHeight;
             this.canvas.style.width = newWidth + "px";
             this.canvas.style.height = newHeight + "px";
-            if (!this.config.isFlat()) {
-                var camera = this.camera;
-                camera.aspect = newWidth / newHeight;
-                camera.updateProjectionMatrix();
-            }
+            var camera = this.camera;
+            camera.aspect = newWidth / newHeight;
+            camera.updateProjectionMatrix();
             this.renderer.setSize(newWidth, newHeight);
         };
         Visualisation3D.prototype.onDocumentMouseMove = function (event) {
@@ -913,9 +928,9 @@ var GravityGraph;
             this.canvas.style.cursor = 'auto';
         };
         Visualisation3D.prototype.selectNode = function (node, event) {
-            if (event) {
-                this.events.emit('nodeSelected', [event, node.getData()]);
-            }
+            //if(event){
+            this.events.emit('nodeSelected', [event, node.getData()]);
+            //}
             if (this.selectedNode) {
                 this.unselectNode(this.selectedNode);
             }
@@ -939,7 +954,10 @@ var GravityGraph;
             this.raycaster.set(this.camera.position, vector.sub(this.camera.position).normalize());
             var intersects = this.raycaster.intersectObjects([this.intersectPlane]);
             if (intersects.length > 0) {
-                this.projectionOffset.copy(intersects[0].point).sub(this.intersectPlane.position).add(this.rootObject3D.position);
+                this.projectionOffset
+                    .copy(intersects[0].point)
+                    .sub(this.intersectPlane.position)
+                    .add(this.rootObject3D.position);
                 return intersects[0];
             }
             return null;
@@ -1026,6 +1044,8 @@ var GravityGraph;
         };
         Visualisation3D.prototype.setNodes = function (nodes) {
             var _this = this;
+            this.config.resetColorBuilder();
+            GravityGraph.Node3D.resetColorMethod();
             this.nodes.forEach(function (n) {
                 _this.rootObject3D.remove(n);
             });
@@ -1044,7 +1064,8 @@ var GravityGraph;
                     }
                 }
             }
-            flattened.forEach(function (node) {
+            flattened.forEach(function (node, i) {
+                node.id = i;
                 var n = new GravityGraph.Node3D(node, _this.config);
                 _this.nodes.push(n);
                 _this.rootObject3D.add(n);
@@ -1057,39 +1078,45 @@ var GravityGraph;
             return this.nodes;
         };
         Visualisation3D.prototype.setLinks = function (links) {
-            var _this = this;
             if (!this.nodes) {
-                throw "setLinks : no nodes founds. You must set nodes before links";
+                throw "GG: setLinks() : no nodes founds. You must set nodes before links";
             }
             else {
-                this.links.forEach(function (l) {
-                    _this.rootObject3D.remove(l);
-                });
+                for (var i = 0; i < this.links.length; i++) {
+                    var l = this.links[i];
+                    this.rootObject3D.remove(l);
+                }
                 this.links = [];
                 this.clouds = [];
                 this.d3Instance.setLinks([]);
                 var filteredLinks = [];
-                links.forEach(function (link) {
+                for (var j = 0; j < links.length; j++) {
+                    var link = links[j];
                     if (typeof link.source === "string") {
-                        link.source = _this.indexOf(link.source);
+                        link.source = this.indexOf(link.source);
                     }
                     if (typeof link.target === "string") {
-                        link.target = _this.indexOf(link.target);
+                        link.target = this.indexOf(link.target);
                     }
-                    var source = _this.nodes[link.source];
-                    var target = _this.nodes[link.target];
+                    var source = this.nodes[link.source];
+                    var target = this.nodes[link.target];
                     if (source && target && source != target) {
                         filteredLinks.push(link);
-                        var link3D = new GravityGraph.Link3D(source, target, link);
-                        _this.links.push(link3D);
-                        if (_this.config.flow && _this.config.isWebGL() && _this.config.quality > 0 /* LOW */) {
+                        var link3D = new GravityGraph.Link3D(source, target, link, this.config);
+                        this.links.push(link3D);
+                        if (this.config.flow && this.config.isWebGL() && this.config.quality > GravityGraph.EQuality.LOW) {
                             var cloud = new GravityGraph.Cloud(link3D);
-                            _this.clouds.push(cloud);
-                            _this.rootObject3D.add(cloud);
+                            this.clouds.push(cloud);
+                            this.rootObject3D.add(cloud);
                         }
-                        _this.rootObject3D.add(link3D);
+                        this.rootObject3D.add(link3D);
                     }
-                });
+                    else {
+                        this.events.emit('warn', [
+                            "Bad link : " + link.source + "->" + link.target + "  =  " + source + "->" + target
+                        ]);
+                    }
+                }
                 this.d3Instance.setLinks(filteredLinks);
                 return this.links;
             }
@@ -1119,166 +1146,139 @@ var GravityGraph;
     })();
     GravityGraph.Visualisation3D = Visualisation3D;
 })(GravityGraph || (GravityGraph = {}));
-/// <reference path='headers/GravityGraph.d.ts' />
 var GravityGraph;
 (function (GravityGraph) {
-    var Text3D = (function (_super) {
-        __extends(Text3D, _super);
-        function Text3D(support) {
-            this.support = support;
-            var materialFront = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            var materialArray = [materialFront];
-            var textGeom = new THREE.TextGeometry(support.getData().value + " >", {
-                size: 3,
-                height: 0,
-                curveSegments: 1,
-                font: "droid sans",
-            });
-            // font: helvetiker, gentilis, droid sans, droid serif, optimer
-            // weight: normal, bold
-            //var textMaterial = new THREE.MeshFaceMaterial(materialArray);
-            _super.call(this, textGeom, materialFront);
-            textGeom.computeBoundingBox();
-            this.width = textGeom.boundingBox.max.x - textGeom.boundingBox.min.x;
-            this.rotateZ(Math.PI / 2);
-            this.setUnFocused();
-        }
-        Text3D.prototype.update = function () {
-            this.position.copy(this.support.getSource().position);
-            this.position.add(this.support.getTarget().position.clone().sub(this.position).divideScalar(2));
-            this.lookAt(this.support.getTarget().position);
-            this.rotateY(-Math.PI / 2);
-        };
-        Text3D.prototype.setFocused = function () {
-            this.visible = true;
-        };
-        Text3D.prototype.setUnFocused = function () {
-            this.visible = false;
-        };
-        return Text3D;
-    })(THREE.Mesh);
-    GravityGraph.Text3D = Text3D;
-})(GravityGraph || (GravityGraph = {}));
-/// <reference path='headers/GravityGraph.d.ts' />
-var GravityGraph;
-(function (GravityGraph) {
-    var Link3D = (function (_super) {
-        __extends(Link3D, _super);
-        function Link3D(source, target, data) {
-            this.data = {
-                source: data.source,
-                target: data.target,
-                value: data.value
-            };
-            this.source = source;
-            this.target = target;
-            //this.arrow = new Arrow3D(this);
-            this.text = new GravityGraph.Text3D(this);
-            //this.arrow.add(this.text);
-            var geometry = new THREE.Geometry();
-            geometry.vertices.push(this.source.position);
-            geometry.vertices.push(this.target.position);
-            _super.call(this, geometry, Link3D.material);
-            this.add(this.text);
-            this.position = this.source.position;
-        }
-        Link3D.prototype.getData = function () {
-            return this.data;
-        };
-        Link3D.prototype.setCloud = function (c) {
-            this.cloud = c;
-        };
-        Link3D.prototype.getCloud = function () {
-            return this.cloud;
-        };
-        Link3D.prototype.getLineLength = function () {
-            return this.lineLength;
-        };
-        Link3D.prototype.getSource = function () {
-            return this.source;
-        };
-        Link3D.prototype.getTarget = function () {
-            return this.target;
-        };
-        Link3D.prototype.getArrow = function () {
-            return this.arrow;
-        };
-        Link3D.prototype.getText = function () {
-            return this.text;
-        };
-        Link3D.prototype.update = function () {
-            this.lineLength = this.source.distanceTo(this.target);
-            //this.position = (this.source.position).clone();
-            //this.geometry.vertices[1] = this.target.position.clone().sub(this.source.position);
-            this.geometry.verticesNeedUpdate = true;
-            if (this.cloud) {
-                this.cloud.update();
+    var D3Wrapper = (function () {
+        function D3Wrapper(config, nodes, links) {
+            var _this = this;
+            if (nodes === void 0) { nodes = []; }
+            if (links === void 0) { links = []; }
+            this.config = config;
+            this.events = new Events();
+            this.nodes = nodes;
+            this.links = links;
+            this.working = false;
+            if (this.config.isFlat()) {
+                this.force = d3.layout.force();
             }
-            //this.arrow.update();
-            this.text.update();
-        };
-        // VIEW
-        Link3D.prototype.setFocused = function () {
-            if (this.cloud)
-                this.cloud.visible = true;
-            //this.arrow.setFocused();
-            this.visible = true;
-            //this.text.setFocused();
-        };
-        Link3D.prototype.setUnFocused = function () {
-            if (this.cloud)
-                this.cloud.visible = false;
-            //this.arrow.setUnFocused();
-            this.visible = false;
-            //this.text.setUnFocused();        
-        };
-        Link3D.material = new THREE.LineBasicMaterial({ color: 0xffffff });
-        return Link3D;
-    })(THREE.Line);
-    GravityGraph.Link3D = Link3D;
-})(GravityGraph || (GravityGraph = {}));
-/// <reference path="headers/three.d.ts" />
-/// <reference path="Link3D.ts" />
-/// <reference path="Node3D.ts" />
-var GravityGraph;
-(function (GravityGraph) {
-    var Arrow3D = (function (_super) {
-        __extends(Arrow3D, _super);
-        function Arrow3D(link) {
-            this.sourcePosition = link.getSource().position;
-            this.targetPosition = link.getTarget().position;
-            var direction = this.targetPosition.clone().sub(this.sourcePosition);
-            _super.call(this, direction.clone().normalize(), this.sourcePosition, direction.length(), Arrow3D.COLOR);
-            this.changeDefaults();
+            else {
+                this.force = d3.layout.force3d();
+            }
+            this.force
+                .charge(this.config.charge)
+                .linkDistance(this.config.distance)
+                .size([1000, 1000])
+                .nodes(this.nodes)
+                .links(this.links)
+                .on('tick', function () {
+                _this.tick();
+            });
+            this.force.on("end", function () {
+                _this.working = false;
+            });
         }
-        Arrow3D.prototype.changeDefaults = function () {
-            this.position = this.sourcePosition;
+        D3Wrapper.prototype.isWorking = function () {
+            return this.working;
         };
-        Arrow3D.prototype.update = function () {
-            var direction = this.targetPosition.clone().sub(this.sourcePosition);
-            this.setDirection(direction.normalize());
-            var length = this.sourcePosition.distanceTo(this.targetPosition);
-            var toAdd = this.targetPosition.clone().sub(this.sourcePosition).normalize().multiplyScalar(1); //length/2);
-            this.position.copy(this.sourcePosition.clone().add(toAdd));
-            this.setLength(length * 0.9);
+        D3Wrapper.prototype.setNodes = function (nodes) {
+            if (nodes === void 0) { nodes = []; }
+            this.nodes = nodes;
+            this.force.nodes(this.nodes);
         };
-        Arrow3D.prototype.setFocused = function () {
-            this.line.visible = true;
-            this.cone.visible = true;
+        D3Wrapper.prototype.setLinks = function (links) {
+            if (links === void 0) { links = []; }
+            this.links = links;
+            this.force.links(this.links);
         };
-        Arrow3D.prototype.setUnFocused = function () {
-            this.line.visible = false;
-            this.cone.visible = false;
+        D3Wrapper.prototype.on = function (name, action) {
+            this.events.add(name, action);
         };
-        Arrow3D.COLOR = 0xffffff; //0x909090;
-        return Arrow3D;
-    })(THREE.ArrowHelper);
-    GravityGraph.Arrow3D = Arrow3D;
+        D3Wrapper.prototype.isStable = function () {
+            return this.force.alpha() <= 1e-2 || false;
+        };
+        D3Wrapper.prototype.isCalm = function () {
+            return this.force.alpha() <= 1e-1;
+        };
+        D3Wrapper.prototype.stabilize = function (limit) {
+            if (limit === void 0) { limit = 150; }
+            this.idle = true;
+            var k = 0;
+            while ((!this.isStable()) && (k < limit)) {
+                this.force.tick(),
+                    k = k + 1;
+            }
+            this.idle = false;
+            this.force.tick();
+        };
+        D3Wrapper.prototype.calmDown = function () {
+            //this.stabilize(50);
+        };
+        D3Wrapper.prototype.shake = function () {
+            if (this.working) {
+                this.force.resume();
+            }
+            else {
+                this.force.start();
+            }
+        };
+        D3Wrapper.prototype.shakeHard = function () {
+            var _this = this;
+            var charge = this.force.charge();
+            var distance = this.force.linkDistance();
+            this.force.charge(10);
+            this.force.linkDistance(0);
+            this.force.start();
+            setTimeout(function () {
+                _this.force.charge(charge);
+                _this.force.linkDistance(distance);
+                _this.force.start();
+            }, 1500);
+        };
+        D3Wrapper.prototype.tick = function () {
+            this.working = true;
+            if (!this.isCalm) {
+                this.force.tick();
+            }
+            else if (!this.idle) {
+                var alpha = this.force.alpha();
+                this.events.emit("tick", [alpha]);
+            }
+        };
+        // VISUAL
+        D3Wrapper.prototype.setDistance = function (distance) {
+            this.force.linkDistance(distance);
+            this.force.start();
+            //this.calmDown();
+        };
+        D3Wrapper.prototype.setCharge = function (charge) {
+            this.force.charge(charge);
+            this.force.start();
+            //this.calmDown();
+        };
+        return D3Wrapper;
+    })();
+    GravityGraph.D3Wrapper = D3Wrapper;
 })(GravityGraph || (GravityGraph = {}));
-/**
-* Created by Geoffrey on 04/04/2015.
-*/
-/// <reference path='headers/GravityGraph.d.ts' />
+var Events = (function () {
+    function Events() {
+        this.eventsMap = {};
+    }
+    Events.prototype.emit = function (name, args) {
+        if (this.eventsMap[name]) {
+            this.eventsMap[name].apply(null, args);
+        }
+    };
+    Events.prototype.add = function (name, action) {
+        this.eventsMap[name] = action;
+    };
+    return Events;
+})();
+/// <reference path="GlobalDefs.ts" />
+/// <reference path="Utils.ts" />
+/// <reference path="Config.ts" />
+/// <reference path="Visualisation3D.ts" />
+/// <reference path="D3Wrapper.ts" />
+/// <reference path="Events.ts" />
 var GravityGraph;
 (function (GravityGraph) {
     "use strict";
@@ -1292,19 +1292,38 @@ var GravityGraph;
     var U = new GravityGraph.Utils();
     var Graph = (function () {
         function Graph(config) {
-            var _this = this;
+            this.events = new Events();
             this.config = new GravityGraph.Config(config);
             this.canvas = document.getElementById(this.config.target);
-            this.events = new Events();
-            console.info("GG : Init");
-            this.force = new GravityGraph.D3Wrapper(this.config);
-            this.vis3D = new GravityGraph.Visualisation3D(this.config, this.force);
             this.paused = false;
-            console.info("Starting main loop.");
             if (this.config.stats) {
                 this.addStats();
             }
-            // bind events
+        }
+        Graph.prototype.initialize = function () {
+            var _this = this;
+            this.events.emit('info', ['GravityGraph : Init']);
+            if (!this.config.isWebGL()) {
+                this.events.emit('warn', ["Degraded mode ! (slower)"]);
+                this.events.emit('warn', ["WebGL is disabled, your drivers, your DirectX version, or your browser are outdated."]);
+                this.events.emit('warn', ["Please update your software.  (https://get.webgl.org/)"]);
+            }
+            this.force = new GravityGraph.D3Wrapper(this.config);
+            this.vis3D = new GravityGraph.Visualisation3D(this.config, this.force);
+            this.vis3D.on('info', function () {
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i - 0] = arguments[_i];
+                }
+                _this.events.emit('info', args);
+            });
+            this.vis3D.on('warn', function () {
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i - 0] = arguments[_i];
+                }
+                _this.events.emit('warn', args);
+            });
             this.vis3D.on("nodeOvered", function () {
                 var args = [];
                 for (var _i = 0; _i < arguments.length; _i++) {
@@ -1337,14 +1356,14 @@ var GravityGraph;
             this.vis3D.on("contextmenu", function () {
                 //this.resetFocus();
             });
-            // ----------------
+            if (this.config.isWebGL()) {
+                this.events.emit('info', ["GG: Everything ok ! Starting main loop."]);
+            }
+            else {
+                this.events.emit('info', ["GG: Starting main loop, running in compatibility mode"]);
+            }
             this.run();
-            /*this.D3Worker.postMessage({
-             message : "setNodes",
-             type: "array",
-             content : positions
-             });*/
-        }
+        };
         /*
          private startD3Worker()  : void{
     
@@ -1376,15 +1395,54 @@ var GravityGraph;
         /**
          * Initialise a 3D scene
          */
-        Graph.prototype.setNodes = function (nodes) {
+        Graph.prototype.setNodes = function (nodes, callback) {
+            this.events.emit('busy', []);
+            var startTime = new Date().getTime();
             var clone = JSON.parse(JSON.stringify(nodes));
             this.force = new GravityGraph.D3Wrapper(this.config);
             this.vis3D.setForce(this.force);
             this.nodes = this.vis3D.setNodes(clone);
+            var endTime = new Date().getTime();
+            this.events.emit('done', ["Nodes generation", (endTime - startTime)]);
+            if (callback) {
+                callback(this.nodes);
+            }
+            return this.nodes;
         };
-        Graph.prototype.setLinks = function (links) {
+        Graph.prototype.setLinks = function (links, callback) {
+            this.events.emit('busy', []);
+            var startTime = new Date().getTime();
             var clone = JSON.parse(JSON.stringify(links));
+            clone = this.groupLinks(clone);
             this.links = this.vis3D.setLinks(clone);
+            var endTime = new Date().getTime();
+            this.events.emit('done', ["Links generation", (endTime - startTime)]);
+            if (callback) {
+                callback();
+            }
+        };
+        Graph.prototype.groupLinks = function (links) {
+            var grouped = [];
+            var map = {};
+            var key;
+            for (var i = 0; i < links.length; i++) {
+                var link = links[i];
+                link.value = link.value || 0;
+                key = link.source + ":" + link.target;
+                if (!map[key]) {
+                    map[key] = link;
+                }
+                else {
+                    map[key].value += link.value;
+                }
+            }
+            for (var key in map) {
+                if (map.hasOwnProperty(key)) {
+                    var element = map[key];
+                    grouped.push(element);
+                }
+            }
+            return grouped;
         };
         // main loop  
         Graph.prototype.run = function (time) {
@@ -1427,33 +1485,21 @@ var GravityGraph;
         Graph.prototype.setDistance = function (distance) {
             this.force.setDistance(distance);
         };
-        // D3
-        /*
-         private updateNodesPositions(positions : Array<INodeData>   ){
-    
-         var node_index = this.nodes.length-1;
-         var positions_index = positions.length-1;
-    
-         while(node_index >= 0 && positions_index >= 0){
-         var n = this.nodes[node_index];
-         var pos = positions[positions_index];
-         n.position.x = pos.x;
-         n.position.y = pos.y;
-         n.position.z = pos.z;
-    
-         node_index--;
-         positions_index--;
-         }
-    
-         }
-         */
+        Graph.prototype.color = function (name) {
+            return this.config.colorBuilder(name);
+        };
         // UTILS
         Graph.prototype.addStats = function () {
+            var actualNode = document.getElementById('stats');
+            if (actualNode) {
+                actualNode.remove();
+                actualNode = undefined;
+            }
             var stats = new Stats();
             stats.setMode(0);
             stats.domElement.style.position = 'absolute';
-            stats.domElement.style.left = (this.canvas.offsetLeft + 5) + "px";
-            stats.domElement.style.top = (this.canvas.offsetTop + 5) + "px";
+            stats.domElement.style.right = 0;
+            stats.domElement.style.bottom = 0;
             this.canvas.parentElement.appendChild(stats.domElement);
             this.stats = stats;
         };
@@ -1475,25 +1521,28 @@ var GravityGraph;
             this.vis3D.unselectNode();
         };
         Graph.prototype.resetFocus = function () {
+            var _this = this;
             this.nodes.forEach(function (node) {
                 node.setFocused();
             });
             if (this.links) {
                 this.links.forEach(function (link) {
-                    link.setFocused();
+                    if (!_this.config.flow) {
+                        link.setFocused();
+                    }
                     link.getText().setUnFocused();
                 });
             }
         };
         Graph.prototype.focusOnRelations = function (nodes, type) {
             var _this = this;
-            if (type === void 0) { type = 3 /* SELF */; }
+            if (type === void 0) { type = ERelation.SELF; }
             var relations = {
                 nodes: [],
                 links: []
             };
             var nodeOfGroup; // a node of the focused group for coparision with other nodes 
-            if (type == 3 /* SELF */ && this.vis3D.getSelectedNode()) {
+            if (type == ERelation.SELF && this.vis3D.getSelectedNode()) {
                 nodeOfGroup = this.vis3D.getSelectedNode();
                 relations = this.getRelationsOf(this.vis3D.getSelectedNode());
             }
@@ -1516,15 +1565,15 @@ var GravityGraph;
                 });
                 this.links.forEach(function (link) {
                     if (relations.links.indexOf(link) != -1) {
-                        if (type == 3 /* SELF */ || type == 2 /* INNER_OUTER */) {
+                        if (type == ERelation.SELF || type == ERelation.INNER_OUTER) {
                             link.setFocused();
                             link.getText().setFocused();
                         }
-                        else if (type == 1 /* OUTER */ && !link.getTarget().isSameGroupOf(link.getSource())) {
+                        else if (type == ERelation.OUTER && !link.getTarget().isSameGroupOf(link.getSource())) {
                             link.setFocused();
                             link.getText().setFocused();
                         }
-                        else if (type == 0 /* INNER */ && link.getTarget().isSameGroupOf(link.getSource())) {
+                        else if (type == ERelation.INNER && link.getTarget().isSameGroupOf(link.getSource())) {
                             link.setFocused();
                             link.getText().setFocused();
                         }
@@ -1542,7 +1591,7 @@ var GravityGraph;
         };
         Graph.prototype.focusOnGroupRelations = function (relationType) {
             var _this = this;
-            if (relationType === void 0) { relationType = 0 /* INNER */; }
+            if (relationType === void 0) { relationType = ERelation.INNER; }
             var nodes = [];
             if (this.vis3D.getSelectedNode()) {
                 this.nodes.forEach(function (node) {
@@ -1615,111 +1664,126 @@ var GravityGraph;
     })();
     GravityGraph.Graph = Graph;
 })(GravityGraph || (GravityGraph = {}));
+/// <reference path="headers/three.d.ts" />
+/// <reference path="GravityGraph.ts" />
+/// <reference path="Link3D.ts" />
+/// <reference path="Node3D.ts" />
+var GravityGraph;
+(function (GravityGraph) {
+    var Arrow3D = (function (_super) {
+        __extends(Arrow3D, _super);
+        function Arrow3D(link) {
+            this.sourcePosition = link.getSource().position;
+            this.targetPosition = link.getTarget().position;
+            var direction = this.targetPosition.clone().sub(this.sourcePosition);
+            _super.call(this, direction.clone().normalize(), this.sourcePosition, direction.length(), Arrow3D.COLOR);
+            this.changeDefaults();
+        }
+        Arrow3D.prototype.changeDefaults = function () {
+            this.position = this.sourcePosition;
+        };
+        Arrow3D.prototype.update = function () {
+            var direction = this.targetPosition.clone().sub(this.sourcePosition);
+            this.setDirection(direction.normalize());
+            var length = this.sourcePosition.distanceTo(this.targetPosition);
+            var toAdd = this.targetPosition.clone().sub(this.sourcePosition).normalize().multiplyScalar(1); //length/2);
+            this.position.copy(this.sourcePosition.clone().add(toAdd));
+            this.setLength(length * 0.9);
+        };
+        Arrow3D.prototype.setFocused = function () {
+            this.line.visible = true;
+            this.cone.visible = true;
+        };
+        Arrow3D.prototype.setUnFocused = function () {
+            this.line.visible = false;
+            this.cone.visible = false;
+        };
+        Arrow3D.COLOR = 0xffffff; //0x909090;
+        return Arrow3D;
+    })(THREE.ArrowHelper);
+    GravityGraph.Arrow3D = Arrow3D;
+})(GravityGraph || (GravityGraph = {}));
 /**
  * Created by Geoffrey on 04/04/2015.
  */
-/// <reference path='headers/GravityGraph.d.ts' />
+/// <reference path="GlobalDefs" />
+/// <reference path="Node3D" />
+/// <reference path="Link3D" />
+/// <reference path="Text3D" />
 /*
 
-importScripts("../vendors/d3.js");
+importScripts(
+    "../vendors/d3.js",
+    "../vendors/three.js",
+    "../dist/GravityGraph.js"
+);
 
 
-
-class D3Worker{
-
-
-    private worker : IWorker;
-
-
-    private force : D3.Layout.ForceLayout;
-
-    private nodes : Array<INodeData>;
-
-    private links : Array<ILinkData>;
-
-
-    constructor( worker : IWorker ){
-        this.worker = worker;
-
-
-        this.worker.onmessage = (event : MessageEvent)=>{
-            switch (event.data.message){
-                case "setNodes" :
-                    this.nodes = event.data.content;
-                    this.force.nodes(this.nodes);
-                    this.skipEnter();
-                    break;
-                case "setLinks" :
-                    this.links = event.data.content;
-                    this.run();
-                    break;
-                default :
-                    break;
+module GravityGraph{
+    
+    export class D3Worker{
+    
+    
+        private worker : IWorker;
+    
+        private nodes : Array<INodeData>;
+    
+        private links : Array<ILinkData>;
+        
+        private graph : IGraph;
+    
+        constructor( worker : IWorker ){
+            this.worker = worker;
+    
+            this.worker.onmessage = (event : MessageEvent)=>{
+                var arrData = event.data.content;
+                var config = new Config(event.data.config);
+                
+                switch (event.data.message){
+                    case "prepareNodes" :
+                        this.prepareNodes(arrData, config);
+                        break;
+                    case "prepareLinks" :
+                        this.prepareLinks(arrData, config);
+                        break;
+                    default :
+                        break;
+                }
             }
-        }
-
-        this.init();
-
-        this.run();
-        this.worker.postMessage({
-            message : "log",
-            type: "string",
-            content: "D3 Worker ready"
-        });
-    }
 
 
-    private init(){
-        this.force = d3.layout.force();
-
-        this.force
-            .charge(-100)
-            .linkDistance(60)
-            .size([100,100])
-            .on('tick', ()=>{
-                this.tick();
+            this.worker.postMessage({
+                message : "log",
+                type: "string",
+                content: "D3 Worker ready"
             });
-
-
-
-    }
-
-
-
-    private run() : void {
-        if(this.nodes != undefined){
-            this.force.start();
         }
-    }
-
-    private skipEnter(): void {
-        this.run();
-        var i = 0;
-        while(this.force.alpha() > 1e-2 ){
-            this.force.tick();
-            i++;
+        
+        
+        
+        
+        
+        
+        private prepareNodes(nodesData : Array<INodeData>, config:Config) : Array<Node3D> {
+            
         }
-
-        this.force.stop();
+            
+        private prepareLinks(nodesData : Array<INodeData>, config:Config) : Array<Link3D> {
+            
+        }
+        
     }
 
+    // START
+    
+    
+    ((self: IWorker) => {
+        new D3Worker(self);
+    })(<any>self);
 
-    private tick(){
-        this.worker.postMessage({
-            message : "tick",
-            type: "array",
-            content : this.nodes
-        });
-    }
+
 }
 
-// START
 
-
-((self: IWorker) => {
-
-    new D3Worker(self);
-})(<any>self);
-
-*/
+*/ 
 //# sourceMappingURL=GravityGraph.js.map
