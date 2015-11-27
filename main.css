@@ -10,6 +10,9 @@ body{
     overflow: hidden;
 }
 
+#spinner{
+    display: none;
+}
 
 #tooltip {
     min-width: 10em;

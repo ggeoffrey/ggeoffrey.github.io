@@ -715,8 +715,8 @@ var GravityGraph;
             this.camera.position.z = 400;
         };
         Visualisation3D.prototype.addRoot = function () {
-            var z = (this.config.isFlat() ? 0 : 1000);
-            var rootContainerPosition = new THREE.Vector3(1000, 1000, z);
+            var z = (this.config.isFlat() ? 0 : 0);
+            var rootContainerPosition = new THREE.Vector3(0, 0, z);
             this.rootObject3D = new THREE.Object3D();
             this.rootObject3D.position.copy(rootContainerPosition).divideScalar(2).negate();
             this.rootObject3D.add(this.nodeSelectAnimation);
@@ -1162,12 +1162,11 @@ var GravityGraph;
                 this.force = d3.layout.force();
             }
             else {
-                this.force = d3.layout.force3d();
+                this.force = d3.layout.force3d(); // now use 3D Barnes-Hut
             }
             this.force
                 .charge(this.config.charge)
                 .linkDistance(this.config.distance)
-                .size([1000, 1000])
                 .nodes(this.nodes)
                 .links(this.links)
                 .on('tick', function () {
