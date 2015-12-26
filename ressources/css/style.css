@@ -1,0 +1,23 @@
+html, body{
+	padding:0;
+	margin:0;
+}
+
+#tooltip{
+	display: none;
+	position: absolute;
+	margin: 1em;
+	padding: 0.5em 1em;
+	background-color: rgba(255,255,255,0.9);
+}
+
+#container {
+	width: 100%;
+	height: 100%;
+}
+
+#stats{
+	position: absolute;
+	right: 0;
+	top: 100%;
+}

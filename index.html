@@ -1,230 +1,106 @@
 <!DOCTYPE html>
 <html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title>GravityGraph</title>
-    <link rel="stylesheet" href="main.css"/>
-    <link rel="stylesheet" href="spinner.css"/>
-</head>
-<body>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link href="ressources/css/style.css" rel="stylesheet" type="text/css">
+	</head>
+	<body>
+		<div id="container">
+			<canvas id="target">
+				Your browser do not support the &lt;canvas&gt; element. You should update it :)
+			</canvas>
+			<div id="tooltip"></div>
+		</div>
 
 
 
-    <canvas id="dev-canvas" width="1300" height="600">
-        Sadly, your browser doesn't support this technology. <br/>
-        Please update your browser or your drivers.
-    </canvas>
+		<script src="ressources/libs/three.js"></script>
+		<script src="ressources/libs/OrbitControls.js"></script>
+		<script src="ressources/libs/d3-3d.js"></script>
+		<script src="ressources/libs/stats.min.js"></script>
 
-    <div id="toolbar">
-        <button onclick="gravityGraph.resetFocus()">
-            Reset
-        </button>
-        <button onclick="gravityGraph.focusOnRelations()">
-            Show relations
-        </button>
-        <button onclick="gravityGraph.focusOnGroupRelations(GravityGraph.ERelation.INNER_OUTER)">
-            Show group relations
-        </button>
-        <button onclick="gravityGraph.focusOnGroupRelations(GravityGraph.ERelation.INNER)">
-            Show group internal relations
-        </button>
-        <button onclick="gravityGraph.focusOnGroupRelations(GravityGraph.ERelation.OUTER)">
-            Show group external relations
-        </button>
-        Charge : <input id="charge" type="range" min="-150" max="10" step="1" onchange="changeCharge(this.value);"/>
-         <span id="chargeVal"></span>
-        
-         Distance : <input id="distance" type="range" min="-10" max="200" step="1" onchange="changeDistance(this.value);"/>
-         <span id="distanceVal"></span>
-         
-        <button onclick="separate = !separate; gravityGraph.separateGroups(separate);">
-            Separate groups
-        </button>
-        <button onclick="gravityGraph.shake();">
-            Shake
-        </button>
-    </div>
-    
-    <div id="spinner">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-          <g class="anim-0">
-            <circle cx="50" cy="50" r="50" fill="#7B1FA2" />
-          </g>
-          <g class="anim-1">
-            <circle cx="50" cy="50" r="5" fill="white" />
-          </g>
-          <g class="anim-2">
-            <circle cx="75" cy="50" r="5" fill="white" />
-            <line x1="25" y1="50" x2="75" y2="50" stroke="white" stroke-width="3" />
-          </g>
-          <g class="anim-3">
-            <circle cx="50" cy="25" r="5" fill="white" />
-            <line x1="50" y1="25" x2="25" y2="75" stroke="white" stroke-width="3" />
-            <line x1="50" y1="25" x2="75" y2="75" stroke="white" stroke-width="3" />
-          </g>
-          <g class="anim-4">
-            <circle cx="75" cy="25" r="5" fill="white" />
-            <line x1="75" y1="25" x2="25" y2="25" stroke="white" stroke-width="3" />
-          </g>
-        </svg>
-    </div>
+		<script src="ressources/libs/gravity.js"></script>
 
-    <div id="tooltip"></div>
-    
-    
-    <!--PROD-->
-    <script src="dist/GravityGraph.min.js"></script>
-    
-    <!--DEV-->
-    <!--<script src="vendors/three.js"></script>
-    <script src="vendors/Detector.js"></script>
-    <script src="vendors/OrbitControls.js"></script>
-    <script src="vendors/CanvasRenderer.js"></script>
-    <script src="vendors/Projector.js"></script>
-        
-    <script src="vendors/d3-3d.js"></script>
-            
-    <script src="vendors/stats.min.js"></script>
-    <script src="vendors/tweenjs-0.6.0.min.js"></script>
-        
-    <script src="vendors/droid_sans_regular.typeface.js"></script>
-    
-    
-    
-    <script src="dist/GravityGraph.js"></script>
-    
-    
-    <script src="vendors/underscore-min.js"></script>-->
-    
-    
+		<script>
+
+			var graph_instance;
+
+			graph_instance = (function(){
+
+				var target_canvas, tooltip, graph, graph_instance;
+
+				target_canvas = document.getElementById('target');
+				tooltip = document.getElementById('tooltip');
+
+				graph = {
+					"nodes" : [{name: "foo", group: 1},{name: "bar", group: 2}],
+					"links" : [{source : 0, target: 1}]
+				};
+
+				graph_instance = gravity.graph.create({
+					"canvas" : target_canvas,
+					"worker-path" : "ressources/libs/gravity-worker.js",
+					"stats" : true,
+					"webgl" : {
+						"antialias" : true,
+						"background" : false,
+						"lights" : true,
+						"shadows" : true
+					},
+					"force": {
+
+					}
+				});
 
 
-    <script>
-        
-        /// <reference path="dist/GravityGraph.js" />        
-        
-        var gravityGraph = new GravityGraph.Graph({
-            target : 'dev-canvas',
-            //opacity: 0,
-            //backgroundColor : 0xffffff,
-            quality : "high",
-            shadows : true,
-            flat : false,
-            flow : false,
-            stats : true,
-            charge : -100,
-            distance : 60,
-            colorType : "20"  // 10, 20a, 20b, 20c
-        });
-        
-        
-        
-        var spinner = document.getElementById('spinner');
-        var spinnerCount = 0;
-        var showSpinner = function() {
-            spinnerCount++;
-            if(spinnerCount == 1){
-                spinner.style.display = "block";
-            }
-        }
-        var hideSpinner = function() {
-            spinnerCount--;
-            if(spinnerCount < 1){
-                spinnerCount = 0;
-                spinner.style.display = "none";
-            }
-        }
-        
-        
-        gravityGraph.on('info', function(message){
-            console.info(message);
-        });
-        
-        gravityGraph.on('warn', function(message){
-            console.warn(message);
-        });
-        
-        
-        
-        gravityGraph.on('busy', function(){
-           //showSpinner(); 
-        });
-        
-        gravityGraph.on('done', function(action, time){
-           console.log(action + " : " + time/1000 + "s.");
-           hideSpinner();
-        });
-        
-        
-        
-        var tooltip = document.getElementById('tooltip');
-        gravityGraph.on('nodeOvered', function (event, data) {
-            tooltip.style.left = (event.clientX + 20) + "px";
-            tooltip.style.top = (event.clientY - 20) + "px";
-            
-            tooltip.innerText = data.name;
-            tooltip.style.opacity = "1";
-            
-        });
-        
-        gravityGraph.on('nodeBlur', function (event) {
-            tooltip.style.opacity = "0";
-        });
-        
-        gravityGraph.on('nodeSelected', function (event, data) {
-            document.title = data.name;
-        });
-        
-        
-        
-        gravityGraph.initialize();
-        
-        
-        
-        
-        d3.json("data-test/miserables.json", function(error, graph) {
-            if (error) {
-                console.log("Error getting data");
-                console.error(error);
-            }
-            else {
-                gravityGraph.setNodes(graph.nodes);
-                gravityGraph.setLinks(graph.links);
-                               
-                gravityGraph.start();
-                
-                
-                
-            }
-        });
-        
-        
-        
-        
-        var separate = false;
-        
-        
-        function changeCharge(val) {
-            gravityGraph.setCharge(val);
-            
-            document.getElementById('charge').value = val;
-            document.getElementById('chargeVal').innerText = val;
-                        
-        }
-        
-        function changeDistance(val) {
-            gravityGraph.setDistance(val);
-            
-            document.getElementById('distance').value = val;
-            document.getElementById('distanceVal').innerText = val;
-                        
-        }
-        
-        
-        
-        
-                
-        
-    </script>
-</body>
+
+				// once initialised, add content
+				graph_instance.on("ready", function(){
+					graph_instance.nodes(graph.nodes);
+					graph_instance.links(graph.links)
+					graph_instance.updateForce();
+				});
+
+				// mouse over a node
+				graph_instance.on("node-over", function(node, event){
+
+					tooltip.innerText = node.name;
+
+					target_canvas.style.cursor = "pointer";
+					tooltip.style.top = event.clientY + "px";
+					tooltip.style.left = event.clientX + "px";
+					tooltip.style.display = "block";
+				});
+
+
+				// mouse leave a node
+				graph_instance.on("node-blur", function(){
+					target_canvas.style.cursor = "inherit";
+					tooltip.style.display = "none";
+				});
+
+
+				graph_instance.on("node-select", function(node, event){
+
+				});
+
+
+				// Add stats
+				if(graph_instance.stats.domElement){
+					var stats = graph_instance.stats.domElement;
+					stats.style.left = "auto";
+					stats.style.top = "auto";
+					stats.style.right = "0px";
+					stats.style.bottom = "0px";
+					target_canvas.parentElement.appendChild(stats);
+				}
+
+
+				return graph_instance;
+			})();
+
+
+		</script>
+	</body>
 </html>
