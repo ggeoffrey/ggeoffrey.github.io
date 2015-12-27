@@ -111,6 +111,7 @@
 				graph_instance.on("node-over", function(node, event){
 
 					tooltip.innerText = node.name;
+					tooltip.textContent = node.name;
 
 					target_canvas.style.cursor = "pointer";
 					tooltip.style.top = event.clientY + "px";
@@ -181,6 +182,7 @@
 						clearTimeout(display_timout);
 					}
 					events_display.innerText = event_name;
+					events_display.textContent = event_name;
 					events_display.className = "shown";
 					display_timout = setTimeout(function(){
 						events_display.className = "hidden";
