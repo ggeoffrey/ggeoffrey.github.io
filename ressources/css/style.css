@@ -1,6 +1,8 @@
 html, body{
 	padding:0;
 	margin:0;
+	width: 100%;
+	height: 100%;
 }
 
 #tooltip{
@@ -9,6 +11,8 @@ html, body{
 	margin: 1em;
 	padding: 0.5em 1em;
 	background-color: rgba(255,255,255,0.9);
+
+	pointer-events: none;
 }
 
 #container {
@@ -20,4 +24,63 @@ html, body{
 	position: absolute;
 	right: 0;
 	top: 100%;
+}
+
+#help{
+	background-color: rgba(200,200,200,0.8);
+	position: absolute;
+	top:0;
+	left:0;
+	border-bottom-right-radius:0.2em;
+}
+ul{
+	list-style-type:none;
+	margin-left:0;
+	padding:  0em 1em;
+}
+
+li.separator{
+	font-size: large;
+	font-weight:bold;
+	text-align:center;
+}
+li.separator:after{
+	content:":";
+}
+li span{
+	font-weight:bold;
+}
+
+#events-display{
+	position: absolute;
+	font-size: x-large;
+	font-weight: bold;
+	background-color: rgba(200,200,200,0.8);
+	min-width: 5em;
+	min-height: 1.2em;
+	border-top-right-radius: 0.2em;
+	bottom: 0;
+	left: 0;
+	text-align:center;
+	padding: 0.5em 1em;
+	pointer-events: none;
+}
+
+.shown{
+	opacity: 1;
+	transition: opacity 0.4s linear;
+}
+
+.hidden{
+	opacity: 0;
+	transition: opacity 0.6s linear;
+}
+
+
+
+#params{
+	position: absolute;
+	top:0;
+	right:0;
+	background-color: rgba(200,200,200,0.8);
 }

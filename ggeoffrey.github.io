@@ -1,1 +1,0 @@
-/home/geoffrey/Documents/GitHub/ggeoffrey.github.io
