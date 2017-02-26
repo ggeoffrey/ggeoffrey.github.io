@@ -1,0 +1,3 @@
+[submodule "CrockyBalboa"]
+	path = CrockyBalboa
+	url = git@github.com:ggeoffrey/CrockyBalboa.git
